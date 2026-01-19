@@ -22,14 +22,37 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         title: const Text("Be Healthy"),
       ),
-      body: Center(
-        child: Container(
-          height: 100,
-          width: 100,
-          child: Text("Be Healthy",style: TextStyle(fontSize: 20,fontWeight:FontWeight.bold),),
+      body: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("assets/images/backgroundimg.png"),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: const Center(
+          child: Text(
+            "Stay Fit, Stay Healthy",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              shadows: [
+                Shadow(
+                  blurRadius: 10.0,
+                  color: Colors.black,
+                  offset: Offset(2.0, 2.0),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
