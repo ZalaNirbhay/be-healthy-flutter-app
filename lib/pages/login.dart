@@ -26,6 +26,12 @@ class login extends StatelessWidget {
                 size: 100,
                 color: Colors.green,
               ),
+              SizedBox(height: 15,),
+              Text("Be Healthy", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.black87),),
+              SizedBox(
+                height: 5,
+              ),
+              Text("Your Journey to wellness", style: TextStyle(fontSize: 14, color: Colors.black54),),
             ],
           ),
         ),
