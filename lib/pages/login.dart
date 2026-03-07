@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 
-class login extends StatelessWidget {
+class login extends StatefulWidget {
   const login({super.key});
+
+  @override
+  State<login> createState() => _loginState();
+}
+
+class _loginState extends State<login> {
+  bool isPasswordHidden = true;
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +74,46 @@ class login extends StatelessWidget {
                           decoration: InputDecoration(
                             hintText: "hello@behealth.app",
                             prefixIcon: Icon(Icons.email_outlined),
+
+                            filled: true,
+                            fillColor: Color(0xFFF5F5F5),
+
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(30),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        Text(
+                          "Password",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+
+                        SizedBox(height: 8),
+
+                        TextField(
+                          obscureText: isPasswordHidden,
+                          decoration: InputDecoration(
+                            hintText: "••••••••",
+
+                            prefixIcon: Icon(Icons.lock_outline),
+
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                isPasswordHidden
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  isPasswordHidden = !isPasswordHidden;
+                                });
+                              },
+                            ),
 
                             filled: true,
                             fillColor: Color(0xFFF5F5F5),
