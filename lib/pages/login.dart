@@ -32,6 +32,27 @@ class login extends StatelessWidget {
                 height: 5,
               ),
               Text("Your Journey to wellness", style: TextStyle(fontSize: 14, color: Colors.black54),),
+              SizedBox(
+                height: 30,
+              ),
+              Container(
+                width: 320,
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 10,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(children: [
+                  Text("This is login card ")
+                ],),
+              ),
             ],
           ),
         ),
