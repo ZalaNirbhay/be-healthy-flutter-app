@@ -68,17 +68,17 @@ class _loginState extends State<login> {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-          
+
                           SizedBox(height: 8),
-          
+
                           TextField(
                             decoration: InputDecoration(
                               hintText: "hello@behealth.app",
                               prefixIcon: Icon(Icons.email_outlined),
-          
+
                               filled: true,
                               fillColor: Color(0xFFF5F5F5),
-          
+
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30),
                                 borderSide: BorderSide.none,
@@ -93,16 +93,16 @@ class _loginState extends State<login> {
                               fontWeight: FontWeight.w500,
                             ),
                           ),
-          
+
                           SizedBox(height: 8),
-          
+
                           TextField(
                             obscureText: isPasswordHidden,
                             decoration: InputDecoration(
                               hintText: "••••••••",
-          
+
                               prefixIcon: Icon(Icons.lock_outline),
-          
+
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   isPasswordHidden
@@ -115,10 +115,10 @@ class _loginState extends State<login> {
                                   });
                                 },
                               ),
-          
+
                               filled: true,
                               fillColor: Color(0xFFF5F5F5),
-          
+
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30),
                                 borderSide: BorderSide.none,
@@ -142,21 +142,21 @@ class _loginState extends State<login> {
                             ],
                           ),
                           SizedBox(height: 10),
-          
+
                           SizedBox(
                             width: double.infinity,
                             height: 50,
-          
+
                             child: ElevatedButton(
                               onPressed: () {},
-          
+
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
-          
+
                               child: Text(
                                 "Login",
                                 style: TextStyle(
@@ -165,6 +165,25 @@ class _loginState extends State<login> {
                                 ),
                               ),
                             ),
+                          ),
+                          SizedBox(height: 20),
+                          Row(
+                            children: [
+                              Expanded(child: Divider()),
+
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 10),
+                                child: Text(
+                                  "Or continue with",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+
+                              Expanded(child: Divider()),
+                            ],
                           ),
                         ],
                       ),
