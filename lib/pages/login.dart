@@ -21,115 +21,158 @@ class _loginState extends State<login> {
             end: Alignment.bottomRight,
           ),
         ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.fitness_center, size: 100, color: Colors.green),
-              SizedBox(height: 15),
-              Text(
-                "Be Healthy",
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+        child: SingleChildScrollView(
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.fitness_center, size: 100, color: Colors.green),
+                SizedBox(height: 15),
+                Text(
+                  "Be Healthy",
+                  style: TextStyle(
+                    fontSize: 32,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
-              ),
-              SizedBox(height: 5),
-              Text(
-                "Your Journey to wellness",
-                style: TextStyle(fontSize: 14, color: Colors.black54),
-              ),
-              SizedBox(height: 30),
-              Container(
-                width: 320,
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 10,
-                      offset: Offset(0, 5),
-                    ),
-                  ],
+                SizedBox(height: 5),
+                Text(
+                  "Your Journey to wellness",
+                  style: TextStyle(fontSize: 14, color: Colors.black54),
                 ),
-                child: Column(
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Email address",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-
-                        SizedBox(height: 8),
-
-                        TextField(
-                          decoration: InputDecoration(
-                            hintText: "hello@behealth.app",
-                            prefixIcon: Icon(Icons.email_outlined),
-
-                            filled: true,
-                            fillColor: Color(0xFFF5F5F5),
-
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: BorderSide.none,
+                SizedBox(height: 30),
+                Container(
+                  width: 320,
+                  padding: EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Email address",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ),
-                        SizedBox(height: 20),
-                        Text(
-                          "Password",
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-
-                        SizedBox(height: 8),
-
-                        TextField(
-                          obscureText: isPasswordHidden,
-                          decoration: InputDecoration(
-                            hintText: "••••••••",
-
-                            prefixIcon: Icon(Icons.lock_outline),
-
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                isPasswordHidden
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
+          
+                          SizedBox(height: 8),
+          
+                          TextField(
+                            decoration: InputDecoration(
+                              hintText: "hello@behealth.app",
+                              prefixIcon: Icon(Icons.email_outlined),
+          
+                              filled: true,
+                              fillColor: Color(0xFFF5F5F5),
+          
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide: BorderSide.none,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  isPasswordHidden = !isPasswordHidden;
-                                });
-                              },
-                            ),
-
-                            filled: true,
-                            fillColor: Color(0xFFF5F5F5),
-
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(30),
-                              borderSide: BorderSide.none,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                          SizedBox(height: 20),
+                          Text(
+                            "Password",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+          
+                          SizedBox(height: 8),
+          
+                          TextField(
+                            obscureText: isPasswordHidden,
+                            decoration: InputDecoration(
+                              hintText: "••••••••",
+          
+                              prefixIcon: Icon(Icons.lock_outline),
+          
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  isPasswordHidden
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    isPasswordHidden = !isPasswordHidden;
+                                  });
+                                },
+                              ),
+          
+                              filled: true,
+                              fillColor: Color(0xFFF5F5F5),
+          
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(30),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () {},
+                                child: Text(
+                                  "Forgot Password?",
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          SizedBox(height: 10),
+          
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+          
+                            child: ElevatedButton(
+                              onPressed: () {},
+          
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+          
+                              child: Text(
+                                "Login",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
