@@ -14,7 +14,6 @@ class _loginState extends State<login> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-
         height: double.infinity,
         width: double.infinity,
         decoration: BoxDecoration(
@@ -26,7 +25,14 @@ class _loginState extends State<login> {
         ),
         child: SingleChildScrollView(
           child: Center(
-            child: Column(
+
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).size.height * 0.08,
+                bottom: 30,
+              ),
+              child: Column(
+
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.fitness_center, size: 100, color: Colors.green),
@@ -165,6 +171,7 @@ class _loginState extends State<login> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
+                                  color: Colors.white
                                 ),
                               ),
                             ),
@@ -223,36 +230,35 @@ class _loginState extends State<login> {
                           ),
                         ],
                       ),
-                     
                     ],
                   ),
                 ),
-                 SizedBox(height: 20),
+                SizedBox(height: 20),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Don't have an account?",
-                            style: TextStyle(color: Colors.black54),
-                          ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Don't have an account?",
+                      style: TextStyle(color: Colors.black54),
+                    ),
 
-                          TextButton(
-                            onPressed: () {},
+                    TextButton(
+                      onPressed: () {},
 
-                            child: Text(
-                              "Sign up",
-                              style: TextStyle(
-                                color: Colors.green,
-                                fontWeight: FontWeight.bold,
-                                
-                              ),
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        "Sign up",
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
+                    ),
+                  ],
+                ),
               ],
             ),
+          ),
           ),
         ),
       ),
