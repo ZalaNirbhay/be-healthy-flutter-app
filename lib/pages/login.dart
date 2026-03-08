@@ -14,6 +14,9 @@ class _loginState extends State<login> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
+
+        height: double.infinity,
+        width: double.infinity,
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFFDFF5EA), Color(0xFFF5F5F5)],
@@ -185,11 +188,69 @@ class _loginState extends State<login> {
                               Expanded(child: Divider()),
                             ],
                           ),
+                          SizedBox(height: 20),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+
+                            child: OutlinedButton.icon(
+                              onPressed: () {},
+
+                              icon: SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: Image.asset(
+                                  "assets/images/logos.png",
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+
+                              label: Text(
+                                "Google",
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: Colors.black,
+                                ),
+                              ),
+
+                              style: OutlinedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
+                     
                     ],
                   ),
                 ),
+                 SizedBox(height: 20),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "Don't have an account?",
+                            style: TextStyle(color: Colors.black54),
+                          ),
+
+                          TextButton(
+                            onPressed: () {},
+
+                            child: Text(
+                              "Sign up",
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                                
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
               ],
             ),
           ),
