@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:be_healthy/pages/login.dart';
 
 class register extends StatefulWidget {
   const register({super.key});
@@ -295,7 +296,12 @@ class _registerState extends State<register> {
                       ),
 
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const login()),
+                          );
+                        },
 
                         child: Text(
                           "Login",
