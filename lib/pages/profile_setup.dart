@@ -92,7 +92,7 @@ class _profile_setupState extends State<profile_setup> {
                   padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(25),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black26,
@@ -106,8 +106,6 @@ class _profile_setupState extends State<profile_setup> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-
-
                           SizedBox(height: 8),
 
                           TextField(
@@ -303,10 +301,12 @@ class _profile_setupState extends State<profile_setup> {
                         ),
                         width: double.infinity,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 5,
+                            vertical: 2,
+                          ),
                           child: Row(
                             children: [
-
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () {},
@@ -318,7 +318,7 @@ class _profile_setupState extends State<profile_setup> {
                                     ),
                                   ),
                                   child: Text(
-                                    "Gain",
+                                    "Lose",
                                     style: TextStyle(fontSize: 13),
                                   ),
                                 ),
@@ -357,21 +357,54 @@ class _profile_setupState extends State<profile_setup> {
                                     ),
                                   ),
                                   child: Text(
-                                    "Lose",
+                                    "Gain",
                                     style: TextStyle(fontSize: 13),
                                   ),
                                 ),
                               ),
-
                             ],
                           ),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
-                SizedBox(height: 30),
+                SizedBox(height: 25),
 
+                SizedBox(
+                  width: 320,
+                  height: 55,
+
+                  child: ElevatedButton(
+                    onPressed: () {},
+
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade600,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                      elevation: 3,
+                    ),
+
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Save & Continue",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white
+                          ),
+                        ),
+
+                        SizedBox(width: 8),
+
+                        Icon(Icons.arrow_forward,color: Colors.white,),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
