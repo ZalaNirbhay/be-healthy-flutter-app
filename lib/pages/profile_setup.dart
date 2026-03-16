@@ -394,17 +394,42 @@ class _profile_setupState extends State<profile_setup> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Colors.white
+                            color: Colors.white,
                           ),
                         ),
 
                         SizedBox(width: 8),
 
-                        Icon(Icons.arrow_forward,color: Colors.white,),
+                        Icon(Icons.arrow_forward, color: Colors.white),
                       ],
                     ),
                   ),
                 ),
+                SizedBox(height: 20),
+
+Column(
+  children: [
+
+    Text(
+      "You can update these details anytime from",
+      textAlign: TextAlign.center,
+      style: TextStyle(color: Colors.black54),
+    ),
+
+    TextButton(
+      onPressed: () {},
+
+      child: Text(
+        "Profile Settings",
+        style: TextStyle(
+          color: Colors.green,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+
+  ],
+),
               ],
             ),
           ),
