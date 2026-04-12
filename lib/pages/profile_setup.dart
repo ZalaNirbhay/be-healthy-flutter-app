@@ -407,29 +407,27 @@ class _profile_setupState extends State<profile_setup> {
                 ),
                 SizedBox(height: 20),
 
-Column(
-  children: [
+                Column(
+                  children: [
+                    Text(
+                      "You can update these details anytime from",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.black54),
+                    ),
 
-    Text(
-      "You can update these details anytime from",
-      textAlign: TextAlign.center,
-      style: TextStyle(color: Colors.black54),
-    ),
+                    TextButton(
+                      onPressed: () {},
 
-    TextButton(
-      onPressed: () {},
-
-      child: Text(
-        "Profile Settings",
-        style: TextStyle(
-          color: Colors.green,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    ),
-
-  ],
-),
+                      child: Text(
+                        "Profile Settings",
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
