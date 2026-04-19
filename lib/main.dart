@@ -1,3 +1,4 @@
+import 'package:be_healthy/pages/food_tracker.dart';
 import 'package:be_healthy/pages/login.dart';
 import 'package:be_healthy/pages/profile_setup.dart';
 import 'package:be_healthy/pages/register.dart';
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: WeightGain(),
+      home: FoodTracker(),
     );
   }
 }
