@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dashboard.dart';
+import 'bmi_calculator.dart';
+import 'food_tracker.dart';
+import 'progress.dart';
+import 'profile_setting.dart';
+import '../widgets/custom_top_bar.dart';
 
 class WeightLoose extends StatefulWidget {
   const WeightLoose({super.key});
@@ -33,7 +39,7 @@ class _WeightLooseState extends State<WeightLoose> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
 
-                buildTopBar(),
+                buildTopBar(context, "Weight Loss Planner"),
 
                 const SizedBox(height: 20),
 
@@ -70,33 +76,11 @@ class _WeightLooseState extends State<WeightLoose> {
         ),
       ),
 
-      bottomNavigationBar: buildBottomNav(),
+      bottomNavigationBar: buildBottomNav(context),
     );
   }
 
-  // 🔹 TOP BAR
-  Widget buildTopBar() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: const Icon(Icons.arrow_back),
-        ),
-
-        const Text(
-          "Weight Loss Planner",
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-
-        const Icon(Icons.person),
-      ],
-    );
-  }
+  // Top Bar removed, moved to custom_top_bar.dart
 
   // 🔹 GOAL SELECTOR
   Widget buildGoalSelector() {
@@ -317,21 +301,27 @@ class _WeightLooseState extends State<WeightLoose> {
   }
 
   // 🔹 BOTTOM NAV
-  Widget buildBottomNav() {
+  Widget buildBottomNav(BuildContext context) {
     return BottomNavigationBar(
-      currentIndex: currentIndex,
+      currentIndex: 0, // This page doesn't strictly have a unique main index 
+                       // but generally acts under the Dashboard tools context.
+      type: BottomNavigationBarType.fixed,
       selectedItemColor: Colors.green,
+      unselectedItemColor: Colors.grey,
 
       onTap: (index) {
-        setState(() {
-          currentIndex = index;
-        });
+        if (index == 0) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Dashboard()));
+        if (index == 1) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const BmiCalculator()));
+        if (index == 2) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const FoodTracker()));
+        if (index == 3) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const progress()));
+        if (index == 4) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProfileSetting()));
       },
 
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-        BottomNavigationBarItem(icon: Icon(Icons.calendar_month), label: "Planner"),
-        BottomNavigationBarItem(icon: Icon(Icons.trending_up), label: "Progress"),
+        BottomNavigationBarItem(icon: Icon(Icons.monitor_weight), label: "BMI"),
+        BottomNavigationBarItem(icon: Icon(Icons.local_fire_department), label: "Calories"),
+        BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: "Progress"),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
       ],
     );

@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'bmi_calculator.dart';
 import 'sidebar.dart';
+import 'food_tracker.dart';
+import 'maintain_calories.dart';
+import 'weight_loose.dart';
+import 'weight_gain.dart';
+import 'progress.dart';
+import 'profile_setting.dart';
+import '../widgets/custom_top_bar.dart';
 
 class Dashboard extends StatelessWidget {
   const Dashboard({super.key});
@@ -8,8 +15,7 @@ class Dashboard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const AppSidebar(), // ✅ Sidebar attached
-
+      drawer: const AppSidebar(),
       backgroundColor: Colors.transparent,
 
       body: Container(
@@ -28,9 +34,7 @@ class Dashboard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-
-                buildTopBar(context), // ✅ PASS CONTEXT
-
+                buildTopBar(context, "BeHealth", isDashboard: true),
                 const SizedBox(height: 20),
 
                 const Text(
@@ -57,45 +61,9 @@ class Dashboard extends StatelessWidget {
           ),
         ),
       ),
-
-      bottomNavigationBar: buildBottomNav(),
+      bottomNavigationBar: buildBottomNav(context),
     );
   }
-}
-
-//////////////////// TOP BAR ////////////////////
-
-Widget buildTopBar(BuildContext context) {
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-
-      // ✅ FIXED MENU BUTTON
-      Builder(
-        builder: (context) {
-          return IconButton(
-            icon: const Icon(Icons.menu, size: 28),
-            onPressed: () {
-              Scaffold.of(context).openDrawer(); // ✅ OPEN SIDEBAR
-            },
-          );
-        },
-      ),
-
-      const Text(
-        "BeHealth",
-        style: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-
-      const CircleAvatar(
-        radius: 18,
-        backgroundColor: Colors.white,
-      ),
-    ],
-  );
 }
 
 //////////////////// PROGRESS ////////////////////
@@ -215,17 +183,50 @@ Widget buildToolsSection(BuildContext context) {
           ),
 
           InkWell(
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const MaintainCalories(),
+                ),
+              );
+            },
             child: buildToolCard(Icons.restaurant, "Maintenance", "Calories"),
           ),
 
           InkWell(
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const FoodTracker(),
+                ),
+              );
+            },
+            child: buildToolCard(Icons.fastfood, "Food", "Tracker"),
+          ),
+
+          InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const WeightLoose(),
+                ),
+              );
+            },
             child: buildToolCard(Icons.trending_down, "Weight Loss", "Planner"),
           ),
 
           InkWell(
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const WeightGain(),
+                ),
+              );
+            },
             child: buildToolCard(Icons.trending_up, "Weight Gain", "Planner"),
           ),
         ],
@@ -315,10 +316,20 @@ Widget buildActionChip(IconData icon, String text) {
 
 //////////////////// BOTTOM NAV ////////////////////
 
-Widget buildBottomNav() {
+Widget buildBottomNav(BuildContext context) {
   return BottomNavigationBar(
+    currentIndex: 0,
+    type: BottomNavigationBarType.fixed,
     selectedItemColor: Colors.green,
     unselectedItemColor: Colors.grey,
+
+    onTap: (index) {
+      if (index == 0) return; // Already on dashboard
+      if (index == 1) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const BmiCalculator()));
+      if (index == 2) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const FoodTracker()));
+      if (index == 3) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const progress()));
+      if (index == 4) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProfileSetting()));
+    },
 
     items: const [
       BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),

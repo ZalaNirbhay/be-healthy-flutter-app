@@ -209,7 +209,9 @@ class _registerState extends State<register> {
                               height: 50,
 
                               child: ElevatedButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  Navigator.pushNamed(context, '/profile-setup');
+                                },
 
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green,
@@ -297,10 +299,7 @@ class _registerState extends State<register> {
 
                       TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const login()),
-                          );
+                          Navigator.pushNamed(context, '/login');
                         },
 
                         child: Text(

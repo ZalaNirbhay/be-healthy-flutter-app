@@ -10,6 +10,8 @@
 
   class _loginState extends State<login> {
     bool isPasswordHidden = true;
+    final TextEditingController _emailController = TextEditingController();
+    final TextEditingController _passwordController = TextEditingController();
 
     @override
     Widget build(BuildContext context) {
@@ -82,6 +84,7 @@
                             SizedBox(height: 8),
 
                             TextField(
+                              controller: _emailController,
                               decoration: InputDecoration(
                                 hintText: "hello@behealth.app",
                                 prefixIcon: Icon(Icons.email_outlined),
@@ -107,6 +110,7 @@
                             SizedBox(height: 8),
 
                             TextField(
+                              controller: _passwordController,
                               obscureText: isPasswordHidden,
                               decoration: InputDecoration(
                                 hintText: "••••••••",
@@ -158,7 +162,16 @@
                               height: 50,
 
                               child: ElevatedButton(
-                                onPressed: () {},
+                                onPressed: () {
+                                  if (_emailController.text == "zala@gmail.com" &&
+                                      _passwordController.text == "123456") {
+                                    Navigator.pushReplacementNamed(context, '/main');
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text("Invalid email or password!")),
+                                    );
+                                  }
+                                },
 
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green,
@@ -246,10 +259,7 @@
 
                       TextButton(
                         onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const register()),
-                          );
+                          Navigator.pushNamed(context, '/register');
                         },
 
                         child: Text(

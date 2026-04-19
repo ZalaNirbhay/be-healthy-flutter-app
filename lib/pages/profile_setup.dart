@@ -376,7 +376,9 @@ class _profile_setupState extends State<profile_setup> {
                   height: 55,
 
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
+                    },
 
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green.shade600,
@@ -416,7 +418,9 @@ class _profile_setupState extends State<profile_setup> {
                     ),
 
                     TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.pushNamed(context, '/profile-setting');
+                      },
 
                       child: Text(
                         "Profile Settings",

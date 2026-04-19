@@ -1,15 +1,12 @@
-import 'package:be_healthy/pages/food_tracker.dart';
-import 'package:be_healthy/pages/login.dart';
-import 'package:be_healthy/pages/profile_setting.dart';
-import 'package:be_healthy/pages/profile_setup.dart';
-import 'package:be_healthy/pages/progress.dart';
-import 'package:be_healthy/pages/register.dart';
-import 'package:be_healthy/pages/weight_gain.dart';
-import 'package:be_healthy/pages/weight_loose.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:be_healthy/pages/login.dart';
+import 'package:be_healthy/pages/register.dart';
+import 'package:be_healthy/pages/profile_setup.dart';
 import 'package:be_healthy/pages/dashboard.dart';
-import 'package:be_healthy/pages/bmi_calculator.dart';
+import 'package:be_healthy/pages/profile_setting.dart';
+import 'package:be_healthy/pages/food_tracker.dart';
+import 'package:be_healthy/pages/maintain_calories.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -28,9 +25,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: ProfileSetting(),
+      initialRoute: '/login',
+      routes: {
+        '/login': (context) => const login(),
+        '/register': (context) => const register(),
+        '/profile-setup': (context) => const profile_setup(),
+        '/main': (context) => const Dashboard(),
+        '/profile-setting': (context) => const ProfileSetting(),
+        '/food-tracker': (context) => const FoodTracker(),
+        '/maintain-calories': (context) => const MaintainCalories(),
+      },
     );
   }
 }

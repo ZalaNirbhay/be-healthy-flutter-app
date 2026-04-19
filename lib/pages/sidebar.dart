@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'dashboard.dart';
 import 'bmi_calculator.dart';
+import 'food_tracker.dart';
+import 'weight_loose.dart';
+import 'weight_gain.dart';
+import 'progress.dart';
+import 'profile_setting.dart';
+
 class AppSidebar extends StatelessWidget {
   const AppSidebar({super.key});
 
@@ -98,29 +104,33 @@ class AppSidebar extends StatelessWidget {
               const SizedBox(height: 25),
 
               // 🔹 Menu Items
-              buildMenuItem(context, Icons.dashboard, "Dashboard", true, () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const Dashboard()),
-                );
+              buildMenuItem(context, Icons.dashboard, "Dashboard", false, () {
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Dashboard()));
               }),
 
               buildMenuItem(context, Icons.calculate, "BMI Calculator", false, () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const BmiCalculator()),
-                );
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const BmiCalculator()));
               }),
 
-              buildMenuItem(context, Icons.local_fire_department, "Calories", false, () {}),
+              buildMenuItem(context, Icons.local_fire_department, "Calories", false, () {
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const FoodTracker()));
+              }),
 
-              buildMenuItem(context, Icons.trending_down, "Weight Loss", false, () {}),
+              buildMenuItem(context, Icons.trending_down, "Weight Loss", false, () {
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const WeightLoose()));
+              }),
 
-              buildMenuItem(context, Icons.trending_up, "Weight Gain", false, () {}),
+              buildMenuItem(context, Icons.trending_up, "Weight Gain", false, () {
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const WeightGain()));
+              }),
 
-              buildMenuItem(context, Icons.show_chart, "Progress", false, () {}),
+              buildMenuItem(context, Icons.show_chart, "Progress", false, () {
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const progress()));
+              }),
 
-              buildMenuItem(context, Icons.person, "Profile", false, () {}),
+              buildMenuItem(context, Icons.person, "Profile", false, () {
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProfileSetting()));
+              }),
 
               const Spacer(),
 
@@ -128,7 +138,9 @@ class AppSidebar extends StatelessWidget {
               const Divider(color: Colors.white30, indent: 20, endIndent: 20),
 
               // 🔹 Logout
-              buildMenuItem(context, Icons.logout, "Logout", false, () {}),
+              buildMenuItem(context, Icons.logout, "Logout", false, () {
+                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+              }),
 
               const SizedBox(height: 20),
             ],

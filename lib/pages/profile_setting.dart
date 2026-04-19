@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+import 'dashboard.dart';
+import 'bmi_calculator.dart';
+import 'food_tracker.dart';
+import 'progress.dart';
+import '../widgets/custom_top_bar.dart';
 
 class ProfileSetting extends StatefulWidget {
   const ProfileSetting({super.key});
@@ -31,9 +36,7 @@ class _ProfileSettingState extends State<ProfileSetting> {
 
             child: Column(
               children: [
-
-                buildTopBar(),
-
+                buildTopBar(context, "Profile Settings"),
                 const SizedBox(height: 20),
 
                 buildProfileHeader(),
@@ -54,34 +57,11 @@ class _ProfileSettingState extends State<ProfileSetting> {
           ),
         ),
       ),
-
-      bottomNavigationBar: buildBottomNav(),
+      bottomNavigationBar: buildBottomNav(context),
     );
   }
 
-  // 🔹 TOP BAR
-  Widget buildTopBar() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: const Icon(Icons.arrow_back),
-        ),
-
-        const Text(
-          "Profile & Settings",
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-
-        const SizedBox(width: 30),
-      ],
-    );
-  }
+  // Top Bar removed, moved to custom_top_bar.dart
 
   // 🔹 PROFILE HEADER
   Widget buildProfileHeader() {
@@ -241,20 +221,25 @@ class _ProfileSettingState extends State<ProfileSetting> {
   }
 
   // 🔹 BOTTOM NAV
-  Widget buildBottomNav() {
+  Widget buildBottomNav(BuildContext context) {
     return BottomNavigationBar(
-      currentIndex: currentIndex,
+      currentIndex: 4, // Profile is index 4
+      type: BottomNavigationBarType.fixed,
       selectedItemColor: Colors.green,
+      unselectedItemColor: Colors.grey,
 
       onTap: (index) {
-        setState(() {
-          currentIndex = index;
-        });
+        if (index == 4) return;
+        if (index == 0) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Dashboard()));
+        if (index == 1) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const BmiCalculator()));
+        if (index == 2) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const FoodTracker()));
+        if (index == 3) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const progress()));
       },
 
       items: const [
         BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-        BottomNavigationBarItem(icon: Icon(Icons.fitness_center), label: "Workouts"),
+        BottomNavigationBarItem(icon: Icon(Icons.monitor_weight), label: "BMI"),
+        BottomNavigationBarItem(icon: Icon(Icons.local_fire_department), label: "Calories"),
         BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: "Progress"),
         BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
       ],
