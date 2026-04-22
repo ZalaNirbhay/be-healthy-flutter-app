@@ -163,14 +163,9 @@
 
                               child: ElevatedButton(
                                 onPressed: () {
-                                  if (_emailController.text == "zala@gmail.com" &&
-                                      _passwordController.text == "123456") {
+
                                     Navigator.pushReplacementNamed(context, '/main');
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text("Invalid email or password!")),
-                                    );
-                                  }
+
                                 },
 
                                 style: ElevatedButton.styleFrom(
