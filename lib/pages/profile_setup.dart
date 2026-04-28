@@ -1,440 +1,324 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class profile_setup extends StatefulWidget {
-  const profile_setup({super.key});
+class ProfileSetup extends StatefulWidget {
+  const ProfileSetup({super.key});
 
   @override
-  State<profile_setup> createState() => _profile_setupState();
+  State<ProfileSetup> createState() => _ProfileSetupState();
 }
 
-class _profile_setupState extends State<profile_setup> {
+class _ProfileSetupState extends State<ProfileSetup> {
+  String selectedGender = "male";
+  String selectedGoal = "weight_loss";
   String activityLevel = "Moderate Exercise";
+
+  final ageController = TextEditingController();
+  final heightController = TextEditingController();
+  final weightController = TextEditingController();
+
+  bool isLoading = false;
+
+  Future<void> saveProfile() async {
+    try {
+      setState(() => isLoading = true);
+
+      String uid = FirebaseAuth.instance.currentUser!.uid;
+
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'age': int.tryParse(ageController.text) ?? 0,
+        'gender': selectedGender,
+        'height_cm': int.tryParse(heightController.text) ?? 0,
+        'weight_kg': int.tryParse(weightController.text) ?? 0,
+        'activity_level': activityLevel,
+        'goal': selectedGoal,
+        'profile_completed': true,
+        'updated_at': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      Navigator.pushReplacementNamed(context, '/main');
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Error saving data")));
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Widget pillInput({required Widget child}) {
+    return Container(
+      height: 55,
+      decoration: BoxDecoration(
+        color: Color(0xFFF2F5F3),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: child,
+    );
+  }
+
+  Widget toggleButton(String text, String value, String group) {
+    bool selected = value == group;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            if (group == selectedGender) {
+              selectedGender = value;
+            } else {
+              selectedGoal = value;
+            }
+          });
+        },
+        child: Container(
+          height: 45,
+          decoration: BoxDecoration(
+            color: selected ? Colors.green.shade50 : Colors.transparent,
+            borderRadius: BorderRadius.circular(25),
+            border: Border.all(
+              color: selected ? Colors.green : Colors.transparent,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              text,
+              style: TextStyle(
+                color: selected ? Colors.green : Colors.grey,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: Color(0xFFDFF5EA),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text(
-          "Profile Setup",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-      ),
-      body: Container(
-        height: double.infinity,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            // colors: [Color(0xFFDFF5EA), Color(0xFFF5F5F5)],
-            colors: [Color(0xFFDFF5EA), Color(0xFFF5F5F5)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SingleChildScrollView(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(height: 10),
-                Text(
-                  "Be Healthy",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
+      backgroundColor: Color(0xFFDFF5EA),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            // BACKGROUND GRADIENT
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFFB6F0D2),
+                    Color(0xFFDFF5EA),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                SizedBox(height: 20),
-                Container(
-                  width: double.infinity,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+              ),
+            ),
+
+            // MAIN CONTENT
+            SingleChildScrollView(
+              child: Column(
+                children: [
+                  SizedBox(height: 10),
+
+                  // TOP BAR
+                  Row(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Tell Us About Yourself To Personalize",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.black54,
-                            ),
-                          ),
-                        ],
+                      IconButton(
+                        icon: Icon(Icons.arrow_back),
+                        onPressed: () => Navigator.pop(context),
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            " Your Health Journey ",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.black54,
-                            ),
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            "Profile Setup",
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-
-                SizedBox(height: 40),
-                Container(
-                  width: 320,
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(25),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 10,
-                        offset: Offset(0, 5),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 8),
-
-                          TextField(
-                            decoration: InputDecoration(
-                              hintText: "Enter Your Age",
-                              prefixIcon: Icon(Icons.cake_rounded),
-
-                              filled: true,
-                              fillColor: Color(0xFFF5F5F5),
-
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(30),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 30),
-
-                          // ignore: sized_box_for_whitespace
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Color(0xFFF5F5F5),
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            width: double.infinity,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                top: 2,
-                                bottom: 2,
-                                left: 5,
-                                right: 5,
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Expanded(
-                                    child: ElevatedButton(
-                                      onPressed: () {},
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            30,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Text("Male"),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    child: ElevatedButton(
-                                      onPressed: () {},
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            30,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Text("Female"),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 30),
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Color(0xFFF5F5F5),
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                            width: double.infinity,
-                            child: Padding(
-                              padding: const EdgeInsets.only(
-                                top: 2,
-                                bottom: 2,
-                                left: 5,
-                                right: 5,
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(
-                                        prefixIcon: Icon(
-                                          Icons.height,
-                                          color: Colors.black,
-                                        ),
-                                        hintText: "Height",
-                                        filled: true,
-                                        fillColor: Colors.white,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 14,
-                                          horizontal: 15,
-                                        ),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            30,
-                                          ),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  SizedBox(width: 8),
-                                  Expanded(
-                                    child: TextField(
-                                      keyboardType: TextInputType.number,
-                                      decoration: InputDecoration(
-                                        prefixIcon: Icon(
-                                          Icons.line_weight,
-                                          color: Colors.black,
-                                        ),
-
-                                        hintText: "Weight",
-                                        filled: true,
-                                        fillColor: Colors.white,
-                                        contentPadding: EdgeInsets.symmetric(
-                                          vertical: 14,
-                                          horizontal: 15,
-                                        ),
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            30,
-                                          ),
-                                          borderSide: BorderSide.none,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: 30),
-                          Text(
-                            "Activity Level",
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-
-                          SizedBox(height: 8),
-
-                          DropdownButtonFormField<String>(
-                            value: activityLevel,
-
-                            decoration: InputDecoration(
-                              prefixIcon: Icon(Icons.directions_run),
-                              filled: true,
-                              fillColor: Color(0xFFF5F5F5),
-
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(30),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-
-                            items:
-                                [
-                                  "Sedentary",
-                                  "Light Exercise",
-                                  "Moderate Exercise",
-                                  "Heavy Exercise",
-                                  "Athlete",
-                                ].map((level) {
-                                  return DropdownMenuItem(
-                                    value: level,
-                                    child: Text(level),
-                                  );
-                                }).toList(),
-
-                            onChanged: (value) {
-                              setState(() {
-                                activityLevel = value!;
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 30),
-
-                      Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(30),
                         ),
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 5,
-                            vertical: 2,
+                      ),
+                      SizedBox(width: 48),
+                    ],
+                  ),
+
+                  SizedBox(height: 10),
+
+                  Text(
+                    "BeHealth",
+                    style:
+                    TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  ),
+
+                  SizedBox(height: 10),
+
+                  Text(
+                    "Tell us about yourself to personalize\nyour health plan",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey),
+                  ),
+
+                  SizedBox(height: 30),
+
+                  // CARD
+                  Container(
+                    margin: EdgeInsets.symmetric(horizontal: 20),
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.9),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Age"),
+                        SizedBox(height: 8),
+                        pillInput(
+                          child: TextField(
+                            controller: ageController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              hintText: "Enter your age",
+                              border: InputBorder.none,
+                              prefixIcon: Icon(Icons.cake),
+                            ),
                           ),
+                        ),
+
+                        SizedBox(height: 20),
+
+                        Text("Gender"),
+                        SizedBox(height: 8),
+                        pillInput(
                           child: Row(
                             children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {},
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    padding: EdgeInsets.symmetric(vertical: 8),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    "Lose",
-                                    style: TextStyle(fontSize: 13),
-                                  ),
-                                ),
-                              ),
-
-                              SizedBox(width: 8),
-
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {},
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    padding: EdgeInsets.symmetric(vertical: 8),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    "Maintain",
-                                    style: TextStyle(fontSize: 12),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                              ),
-
-                              SizedBox(width: 8),
-
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {},
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    padding: EdgeInsets.symmetric(vertical: 8),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(30),
-                                    ),
-                                  ),
-                                  child: Text(
-                                    "Gain",
-                                    style: TextStyle(fontSize: 13),
-                                  ),
-                                ),
-                              ),
+                              toggleButton("Male", "male", selectedGender),
+                              toggleButton("Female", "female", selectedGender),
                             ],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 25),
 
-                SizedBox(
-                  width: 320,
-                  height: 55,
+                        SizedBox(height: 20),
 
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamedAndRemoveUntil(context, '/main', (route) => false);
-                    },
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  Text("Height (cm)"),
+                                  SizedBox(height: 8),
+                                  pillInput(
+                                    child: TextField(
+                                      controller: heightController,
+                                      keyboardType: TextInputType.number,
+                                      decoration: InputDecoration(
+                                        border: InputBorder.none,
+                                        prefixIcon: Icon(Icons.height),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  Text("Weight (kg)"),
+                                  SizedBox(height: 8),
+                                  pillInput(
+                                    child: TextField(
+                                      controller: weightController,
+                                      keyboardType: TextInputType.number,
+                                      decoration: InputDecoration(
+                                        border: InputBorder.none,
+                                        prefixIcon:
+                                        Icon(Icons.fitness_center),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
 
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green.shade600,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      elevation: 3,
-                    ),
+                        SizedBox(height: 20),
 
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Save & Continue",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                        Text("Activity Level"),
+                        SizedBox(height: 8),
+                        pillInput(
+                          child: DropdownButtonFormField<String>(
+                            value: activityLevel,
+                            decoration:
+                            InputDecoration(border: InputBorder.none),
+                            items: [
+                              "Sedentary",
+                              "Light Exercise",
+                              "Moderate Exercise",
+                              "Heavy Exercise",
+                              "Athlete",
+                            ].map((e) {
+                              return DropdownMenuItem(
+                                  value: e, child: Text(e));
+                            }).toList(),
+                            onChanged: (val) =>
+                                setState(() => activityLevel = val!),
                           ),
                         ),
 
-                        SizedBox(width: 8),
+                        SizedBox(height: 20),
 
-                        Icon(Icons.arrow_forward, color: Colors.white),
+                        Text("Fitness Goal"),
+                        SizedBox(height: 8),
+                        Row(
+                          children: [
+                            toggleButton(
+                                "Lose", "weight_loss", selectedGoal),
+                            toggleButton("Maintain", "maintain",
+                                selectedGoal),
+                            toggleButton(
+                                "Gain", "weight_gain", selectedGoal),
+                          ],
+                        ),
                       ],
                     ),
                   ),
-                ),
-                SizedBox(height: 20),
 
-                Column(
-                  children: [
-                    Text(
-                      "You can update these details anytime from",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.black54),
-                    ),
+                  SizedBox(height: 30),
 
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushNamed(context, '/profile-setting');
-                      },
-
-                      child: Text(
-                        "Profile Settings",
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
+                  // BUTTON
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: ElevatedButton(
+                      onPressed: isLoading ? null : saveProfile,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        minimumSize: Size(double.infinity, 55),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
                         ),
                       ),
+                      child: isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                        "Save & Continue →",
+                        style: TextStyle(fontSize: 16),
+                      ),
                     ),
-                  ],
-                ),
-              ],
+                  ),
+
+                  SizedBox(height: 20),
+
+                  Text(
+                    "You can update these details anytime from your profile settings.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey),
+                  ),
+
+                  SizedBox(height: 20),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

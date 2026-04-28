@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:be_healthy/pages/login.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class register extends StatefulWidget {
   const register({super.key});
@@ -73,6 +74,66 @@ class _registerState extends State<register> {
       );
     } finally {
       setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+
+      if (googleUser == null) return;
+
+      final GoogleSignInAuthentication googleAuth =
+      await googleUser.authentication;
+
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      UserCredential userCredential =
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      User user = userCredential.user!;
+
+      // 🔥 CHECK FIRESTORE
+      DocumentReference userDoc =
+      FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+      DocumentSnapshot doc = await userDoc.get();
+
+      if (!doc.exists) {
+        // NEW USER
+        await userDoc.set({
+          'name': user.displayName ?? "",
+          'email': user.email ?? "",
+
+          'age': null,
+          'gender': null,
+          'height_cm': null,
+          'weight_kg': null,
+          'activity_level': null,
+          'goal': null,
+
+          'profile_completed': false,
+          'created_at': FieldValue.serverTimestamp(),
+        });
+
+        Navigator.pushReplacementNamed(context, '/profile-setup');
+      } else {
+        // EXISTING USER
+        bool completed = doc['profile_completed'];
+
+        if (completed) {
+          Navigator.pushReplacementNamed(context, '/main');
+        } else {
+          Navigator.pushReplacementNamed(context, '/profile-setup');
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Google Sign-In Failed")),
+      );
     }
   }
 
@@ -281,7 +342,9 @@ class _registerState extends State<register> {
                               width: double.infinity,
                               height: 50,
                               child: OutlinedButton.icon(
-                                onPressed: () {},
+                                onPressed: () {
+                                  signInWithGoogle();
+                                },
                                 icon: SizedBox(
                                   height: 24,
                                   width: 24,

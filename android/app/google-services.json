@@ -12,7 +12,20 @@
           "package_name": "com.example.be_healthy"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1012629903941-9d725ndv75leb22d35rjgc53nrl75jki.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.be_healthy",
+            "certificate_hash": "6e2ff5cd329414974d020e72723ea22b79d920f8"
+          }
+        },
+        {
+          "client_id": "1012629903941-h15jfdnqaridmaeh9faqbd1ishhtjk3c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA6FmHiLh9w1sbf-fOWAjlUJDKd1da8Z6A"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1012629903941-h15jfdnqaridmaeh9faqbd1ishhtjk3c.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1012629903941-pdd3djqumhc0e9rfaltaoqr7cnlnfc27.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.beHealthy"
+              }
+            }
+          ]
         }
       }
     }

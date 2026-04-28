@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:be_healthy/pages/login.dart';
+import 'package:be_healthy/pages/login.dart';
 import 'package:be_healthy/pages/register.dart';
 import 'package:be_healthy/pages/profile_setup.dart';
 import 'package:be_healthy/pages/dashboard.dart';
@@ -29,9 +30,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/login',
       routes: {
-        '/login': (context) => const login(),
+        '/login': (context) => const Login(),
         '/register': (context) => const register(),
-        '/profile-setup': (context) => const profile_setup(),
+        '/profile-setup': (context) => const ProfileSetup(),
         '/main': (context) => const Dashboard(),
         '/profile-setting': (context) => const ProfileSetting(),
         '/food-tracker': (context) => const FoodTracker(),
