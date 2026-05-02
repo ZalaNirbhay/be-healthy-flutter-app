@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:be_healthy/pages/register.dart';
 import 'package:be_healthy/services/auth_service.dart';
 
 class Login extends StatefulWidget {
