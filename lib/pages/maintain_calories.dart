@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/custom_top_bar.dart';
+import '../services/calorie_service.dart';
 
 class MaintainCalories extends StatefulWidget {
   const MaintainCalories({super.key});
@@ -15,6 +16,15 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
   double minCal = 1800;
   double maxCal = 2600;
 
+  // 🔥 Dynamic TDEE data
+  int tdee = 0;
+  int bmr = 0;
+  int weightLossCalories = 0;
+  int weightGainCalories = 0;
+  bool isLoading = true;
+  bool isRecalculating = false;
+  String? errorMessage;
+
   final List<String> activityOptions = [
     "Sedentary (little or no exercise)",
     "Lightly Active (1-3 days/week)",
@@ -22,6 +32,60 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
     "Very Active (6-7 days/week)",
     "Athlete (2x training)",
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _calculateCalories();
+  }
+
+  // 🔥 Fetch user data and calculate TDEE
+  Future<void> _calculateCalories() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    // Map the dropdown value to the profile activity_level format
+    final profileActivityLevel = CalorieService.mapDropdownToProfileLevel(activityLevel);
+
+    final result = await CalorieService.calculateFromProfile(
+      overrideActivityLevel: profileActivityLevel,
+    );
+
+    if (!mounted) return;
+
+    if (result['success'] == true) {
+      setState(() {
+        tdee = result['tdee'];
+        bmr = result['bmr'];
+        weightLossCalories = result['weight_loss_calories'];
+        weightGainCalories = result['weight_gain_calories'];
+        minCal = weightLossCalories.toDouble();
+        maxCal = weightGainCalories.toDouble();
+        isLoading = false;
+        isRecalculating = false;
+      });
+
+      // Save to history
+      CalorieService.saveCalculationHistory(
+        tdee: tdee,
+        type: 'maintenance_calories',
+      );
+    } else {
+      setState(() {
+        isLoading = false;
+        isRecalculating = false;
+        errorMessage = result['message'] ?? 'Calculation failed';
+      });
+    }
+  }
+
+  // 🔥 Recalculate when button pressed or activity changes
+  Future<void> _recalculate() async {
+    setState(() => isRecalculating = true);
+    await _calculateCalories();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +145,7 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
           ),
         ),
       ),
-    ); // ✅ FIXED HERE (removed extra comma)
+    );
   }
 
   // 🔹 DROPDOWN
@@ -106,12 +170,14 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
           setState(() {
             activityLevel = value!;
           });
+          // Auto-recalculate when activity changes
+          _recalculate();
         },
       ),
     );
   }
 
-  // 🔹 MAIN CARD
+  // 🔹 MAIN CARD — Now dynamic
   Widget buildMainCard() {
     return Container(
       padding: const EdgeInsets.all(25),
@@ -121,12 +187,28 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
       ),
       child: Column(
         children: [
-          const Text(
-            "2,200",
-            style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 5),
-          const Text("kcal / day"),
+          if (isLoading)
+            const SizedBox(
+              height: 50,
+              child: Center(
+                child: CircularProgressIndicator(color: Colors.green),
+              ),
+            )
+          else if (errorMessage != null)
+            Text(
+              errorMessage!,
+              style: const TextStyle(color: Colors.red, fontSize: 14),
+              textAlign: TextAlign.center,
+            )
+          else ...[
+            // 🔥 Dynamic TDEE value
+            Text(
+              _formatNumber(tdee),
+              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 5),
+            const Text("kcal / day"),
+          ],
           const SizedBox(height: 15),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -144,7 +226,7 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
     );
   }
 
-  // 🔹 RANGE CARD
+  // 🔹 RANGE CARD — Now dynamic with weight loss/gain values
   Widget buildRangeCard() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -159,9 +241,12 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
               style: TextStyle(color: Colors.black54)),
           const SizedBox(height: 20),
           RangeSlider(
-            values: RangeValues(minCal, maxCal),
-            min: 1500,
-            max: 3000,
+            values: RangeValues(
+              minCal.clamp(1000, 4000),
+              maxCal.clamp(1000, 4000),
+            ),
+            min: 1000,
+            max: 4000,
             activeColor: Colors.green,
             onChanged: (values) {
               setState(() {
@@ -215,24 +300,50 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
     );
   }
 
-  // 🔹 BUTTON
+  // 🔹 BUTTON — Now functional
   Widget buildButton() {
     return SizedBox(
       width: double.infinity,
       height: 55,
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: isRecalculating ? null : _recalculate,
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.green,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
         ),
-        child: const Text(
-          "Recalculate",
-          style: TextStyle(fontSize: 18, color: Colors.black),
-        ),
+        child: isRecalculating
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 2,
+                ),
+              )
+            : const Text(
+                "Recalculate",
+                style: TextStyle(fontSize: 18, color: Colors.black),
+              ),
       ),
     );
+  }
+
+  /// Format number with comma separator (e.g. 2,200)
+  String _formatNumber(int number) {
+    String str = number.toString();
+    if (str.length <= 3) return str;
+
+    String result = '';
+    int count = 0;
+    for (int i = str.length - 1; i >= 0; i--) {
+      count++;
+      result = str[i] + result;
+      if (count % 3 == 0 && i != 0) {
+        result = ',$result';
+      }
+    }
+    return result;
   }
 }
