@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:be_healthy/pages/register.dart';
-
-// 🔥 ADD THESE IMPORTS
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:be_healthy/services/auth_service.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});
@@ -15,62 +11,56 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   bool isPasswordHidden = true;
+  bool isLoading = false;
+  bool isGoogleLoading = false;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  // 🔥 GOOGLE AUTH FUNCTION
-  Future<void> signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+  // 🔥 EMAIL LOGIN — Now uses Firebase Auth
+  Future<void> loginWithEmail() async {
+    setState(() => isLoading = true);
 
-      if (googleUser == null) return;
+    final result = await AuthService.signInWithEmail(
+      _emailController.text,
+      _passwordController.text,
+    );
 
-      final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
+    setState(() => isLoading = false);
 
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+    if (!mounted) return;
 
-      UserCredential userCredential =
-      await FirebaseAuth.instance.signInWithCredential(credential);
-
-      User user = userCredential.user!;
-
-      DocumentReference userDoc =
-      FirebaseFirestore.instance.collection('users').doc(user.uid);
-
-      DocumentSnapshot doc = await userDoc.get();
-
-      // 🔥 NEW USER
-      if (!doc.exists) {
-        await userDoc.set({
-          'name': user.displayName ?? "",
-          'email': user.email ?? "",
-          'age': null,
-          'gender': null,
-          'height_cm': null,
-          'weight_kg': null,
-          'activity_level': null,
-          'goal': null,
-          'profile_completed': false,
-          'created_at': FieldValue.serverTimestamp(),
-        });
-
-        Navigator.pushReplacementNamed(context, '/profile-setup');
+    if (result['success'] == true) {
+      if (result['profileCompleted'] == true) {
+        Navigator.pushReplacementNamed(context, '/main');
       } else {
-        bool completed = doc['profile_completed'];
-
-        if (completed) {
-          Navigator.pushReplacementNamed(context, '/main');
-        } else {
-          Navigator.pushReplacementNamed(context, '/profile-setup');
-        }
+        Navigator.pushReplacementNamed(context, '/profile-setup');
       }
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Google Sign-In Failed")),
+        SnackBar(content: Text(result['message'] ?? 'Login failed')),
+      );
+    }
+  }
+
+  // 🔥 GOOGLE SIGN-IN — Uses centralized AuthService
+  Future<void> signInWithGoogle() async {
+    setState(() => isGoogleLoading = true);
+
+    final result = await AuthService.signInWithGoogle();
+
+    setState(() => isGoogleLoading = false);
+
+    if (!mounted) return;
+
+    if (result['success'] == true) {
+      if (result['profileCompleted'] == true) {
+        Navigator.pushReplacementNamed(context, '/main');
+      } else {
+        Navigator.pushReplacementNamed(context, '/profile-setup');
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Google Sign-In Failed')),
       );
     }
   }
@@ -189,22 +179,29 @@ class _LoginState extends State<Login> {
                               width: double.infinity,
                               height: 50,
                               child: ElevatedButton(
-                                onPressed: () {
-                                  Navigator.pushReplacementNamed(context, '/main');
-                                },
+                                onPressed: isLoading ? null : loginWithEmail,
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.green,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(30),
                                   ),
                                 ),
-                                child: Text(
-                                  "Login",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                child: isLoading
+                                    ? SizedBox(
+                                        width: 22,
+                                        height: 22,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : Text(
+                                        "Login",
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                               ),
                             ),
 
@@ -223,19 +220,27 @@ class _LoginState extends State<Login> {
 
                             SizedBox(height: 20),
 
-                            // 🔥 ONLY CHANGE HERE
+                            // 🔥 Google Sign-In Button
                             SizedBox(
                               width: double.infinity,
                               height: 50,
                               child: OutlinedButton.icon(
-                                onPressed: signInWithGoogle, // ✅ CONNECTED
-                                icon: SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: Image.asset(
-                                    "assets/images/logos.png",
-                                  ),
-                                ),
+                                onPressed: isGoogleLoading ? null : signInWithGoogle,
+                                icon: isGoogleLoading
+                                    ? SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : SizedBox(
+                                        height: 24,
+                                        width: 24,
+                                        child: Image.asset(
+                                          "assets/images/logos.png",
+                                        ),
+                                      ),
                                 label: Text("Google"),
                                 style: OutlinedButton.styleFrom(
                                   shape: RoundedRectangleBorder(

@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:be_healthy/services/auth_service.dart';
+import 'dart:io';
 import 'dashboard.dart';
 import 'bmi_calculator.dart';
 import 'food_tracker.dart';
@@ -15,6 +19,76 @@ class ProfileSetting extends StatefulWidget {
 class _ProfileSettingState extends State<ProfileSetting> {
   bool isDarkMode = false;
   int currentIndex = 3;
+
+  // 🔥 Dynamic user data
+  String userName = "";
+  String userEmail = "";
+  String photoUrl = "";
+  bool isLoading = true;
+  bool isUploading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  // 🔥 TASK 3: Fetch user data from Firestore
+  Future<void> _loadUserData() async {
+    try {
+      final data = await AuthService.getUserDocument();
+
+      if (data != null && mounted) {
+        setState(() {
+          userName = data['name'] ?? "";
+          userEmail = data['email'] ?? "";
+          photoUrl = data['photo_url'] ?? "";
+          isLoading = false;
+        });
+      } else {
+        setState(() => isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
+  }
+
+  // 🔥 TASK 5: Upload profile image
+  Future<void> _uploadImage() async {
+    setState(() => isUploading = true);
+
+    final result = await AuthService.uploadProfileImage();
+
+    setState(() => isUploading = false);
+
+    if (!mounted) return;
+
+    if (result['success'] == true) {
+      // Clear Flutter's image cache so the new photo loads immediately
+      imageCache.clear();
+      imageCache.clearLiveImages();
+
+      setState(() {
+        photoUrl = result['photoUrl'];
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile image updated!")),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(result['message'] ?? 'Upload failed')),
+      );
+    }
+  }
+
+  // 🔥 TASK 8: Logout
+  Future<void> _logout() async {
+    await AuthService.signOut();
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -61,45 +135,99 @@ class _ProfileSettingState extends State<ProfileSetting> {
     );
   }
 
-  // Top Bar removed, moved to custom_top_bar.dart
-
-  // 🔹 PROFILE HEADER
+  // 🔹 PROFILE HEADER — Now dynamic with Firestore data
   Widget buildProfileHeader() {
     return Column(
       children: [
 
-        Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.green.withOpacity(0.5),
-                blurRadius: 15,
+        // 🔥 TASK 4: Profile image handling
+        GestureDetector(
+          onTap: _uploadImage,
+          child: Stack(
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.5),
+                      blurRadius: 15,
+                    ),
+                  ],
+                ),
+                child: CircleAvatar(
+                  radius: 55,
+                  backgroundColor: Colors.grey.shade200,
+                  backgroundImage: photoUrl.isNotEmpty
+                      ? (AuthService.isLocalFile(photoUrl)
+                          ? FileImage(File(photoUrl))
+                          : NetworkImage(photoUrl)) as ImageProvider
+                      : null,
+                  child: photoUrl.isEmpty
+                      ? const Icon(Icons.person, size: 55, color: Colors.grey)
+                      : null,
+                ),
+              ),
+
+              // Upload indicator / camera icon
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                  child: isUploading
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Icon(
+                          Icons.camera_alt,
+                          size: 16,
+                          color: Colors.white,
+                        ),
+                ),
               ),
             ],
-          ),
-          child: const CircleAvatar(
-            radius: 55,
-            backgroundImage: AssetImage("assets/images/profile1.jpg"),
           ),
         ),
 
         const SizedBox(height: 15),
 
-        const Text(
-          "Zala Nirbhay",
-          style: TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        // 🔥 TASK 3: Dynamic name
+        isLoading
+            ? const SizedBox(
+                width: 100,
+                child: LinearProgressIndicator(color: Colors.green),
+              )
+            : Text(
+                userName.isNotEmpty ? userName : "User",
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
 
         const SizedBox(height: 5),
 
-        const Text(
-          "nirbhay.zala@example.com",
-          style: TextStyle(color: Colors.black54),
-        ),
+        // 🔥 TASK 3: Dynamic email
+        isLoading
+            ? const SizedBox(
+                width: 150,
+                child: LinearProgressIndicator(color: Colors.green),
+              )
+            : Text(
+                userEmail.isNotEmpty ? userEmail : "No email",
+                style: const TextStyle(color: Colors.black54),
+              ),
 
         const SizedBox(height: 15),
 
@@ -196,14 +324,14 @@ class _ProfileSettingState extends State<ProfileSetting> {
     );
   }
 
-  // 🔹 LOGOUT BUTTON
+  // 🔹 LOGOUT BUTTON — Now functional
   Widget buildLogoutButton() {
     return SizedBox(
       width: double.infinity,
       height: 55,
 
       child: ElevatedButton(
-        onPressed: () {},
+        onPressed: _logout,
 
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.orange,

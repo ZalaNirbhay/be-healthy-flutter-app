@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:be_healthy/pages/login.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:be_healthy/services/auth_service.dart';
 
 class register extends StatefulWidget {
   const register({super.key});
@@ -20,7 +18,9 @@ class _registerState extends State<register> {
   final TextEditingController confirmPasswordController = TextEditingController();
 
   bool isLoading = false;
+  bool isGoogleLoading = false;
 
+  // 🔥 REGISTER — Uses centralized AuthService
   Future<void> registerUser() async {
     if (passwordController.text != confirmPasswordController.text) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -29,110 +29,46 @@ class _registerState extends State<register> {
       return;
     }
 
-    try {
-      setState(() => isLoading = true);
+    setState(() => isLoading = true);
 
-      UserCredential userCredential =
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+    final result = await AuthService.registerWithEmail(
+      nameController.text,
+      emailController.text,
+      passwordController.text,
+    );
 
-      String uid = userCredential.user!.uid;
+    setState(() => isLoading = false);
 
-      await FirebaseFirestore.instance.collection('users').doc(uid).set({
-        'name': nameController.text.trim(),
-        'email': emailController.text.trim(),
+    if (!mounted) return;
 
-        'age': null,
-        'gender': null,
-        'height_cm': null,
-        'weight_kg': null,
-        'activity_level': null,
-        'goal': null,
-
-        'profile_completed': false,
-        'created_at': FieldValue.serverTimestamp(),
-      });
-
+    if (result['success'] == true) {
       Navigator.pushReplacementNamed(context, '/profile-setup');
-    } on FirebaseAuthException catch (e) {
-      String message = "Something went wrong";
-
-      if (e.code == 'email-already-in-use') {
-        message = "Email already exists";
-      } else if (e.code == 'weak-password') {
-        message = "Password should be at least 6 characters";
-      }
-
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        SnackBar(content: Text(result['message'] ?? 'Registration failed')),
       );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-    } finally {
-      setState(() => isLoading = false);
     }
   }
 
+  // 🔥 GOOGLE SIGN-IN — Uses centralized AuthService
   Future<void> signInWithGoogle() async {
-    try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+    setState(() => isGoogleLoading = true);
 
-      if (googleUser == null) return;
+    final result = await AuthService.signInWithGoogle();
 
-      final GoogleSignInAuthentication googleAuth =
-      await googleUser.authentication;
+    setState(() => isGoogleLoading = false);
 
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+    if (!mounted) return;
 
-      UserCredential userCredential =
-      await FirebaseAuth.instance.signInWithCredential(credential);
-
-      User user = userCredential.user!;
-
-      // 🔥 CHECK FIRESTORE
-      DocumentReference userDoc =
-      FirebaseFirestore.instance.collection('users').doc(user.uid);
-
-      DocumentSnapshot doc = await userDoc.get();
-
-      if (!doc.exists) {
-        // NEW USER
-        await userDoc.set({
-          'name': user.displayName ?? "",
-          'email': user.email ?? "",
-
-          'age': null,
-          'gender': null,
-          'height_cm': null,
-          'weight_kg': null,
-          'activity_level': null,
-          'goal': null,
-
-          'profile_completed': false,
-          'created_at': FieldValue.serverTimestamp(),
-        });
-
-        Navigator.pushReplacementNamed(context, '/profile-setup');
+    if (result['success'] == true) {
+      if (result['profileCompleted'] == true) {
+        Navigator.pushReplacementNamed(context, '/main');
       } else {
-        // EXISTING USER
-        bool completed = doc['profile_completed'];
-
-        if (completed) {
-          Navigator.pushReplacementNamed(context, '/main');
-        } else {
-          Navigator.pushReplacementNamed(context, '/profile-setup');
-        }
+        Navigator.pushReplacementNamed(context, '/profile-setup');
       }
-    } catch (e) {
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Google Sign-In Failed")),
+        SnackBar(content: Text(result['message'] ?? 'Google Sign-In Failed')),
       );
     }
   }
@@ -342,17 +278,23 @@ class _registerState extends State<register> {
                               width: double.infinity,
                               height: 50,
                               child: OutlinedButton.icon(
-                                onPressed: () {
-                                  signInWithGoogle();
-                                },
-                                icon: SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: Image.asset(
-                                    "assets/images/logos.png",
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
+                                onPressed: isGoogleLoading ? null : signInWithGoogle,
+                                icon: isGoogleLoading
+                                    ? SizedBox(
+                                        height: 20,
+                                        width: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : SizedBox(
+                                        height: 24,
+                                        width: 24,
+                                        child: Image.asset(
+                                          "assets/images/logos.png",
+                                          fit: BoxFit.contain,
+                                        ),
+                                      ),
                                 label: Text(
                                   "Google",
                                   style: TextStyle(

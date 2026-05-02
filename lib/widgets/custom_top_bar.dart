@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:be_healthy/services/auth_service.dart';
+import 'dart:io';
 import '../pages/dashboard.dart';
 import '../pages/profile_setting.dart';
 
-// 🔹 REUSABLE PROFILE ICON
+// 🔹 REUSABLE PROFILE ICON — Now shows dynamic user photo
 Widget buildProfileIcon(BuildContext context) {
   return GestureDetector(
     onTap: () {
@@ -11,22 +13,39 @@ Widget buildProfileIcon(BuildContext context) {
         MaterialPageRoute(builder: (_) => const ProfileSetting()),
       );
     },
-    child: Container(
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 6,
-            offset: Offset(0, 2),
-          )
-        ],
-      ),
-      child: const CircleAvatar(
-        radius: 20,
-        backgroundColor: Colors.white,
-        child: Icon(Icons.person, color: Colors.green),
-      ),
+    child: FutureBuilder<Map<String, dynamic>?>(
+      future: AuthService.getUserDocument(),
+      builder: (context, snapshot) {
+        String photoUrl = "";
+        if (snapshot.hasData && snapshot.data != null) {
+          photoUrl = snapshot.data!['photo_url'] ?? "";
+        }
+
+        return Container(
+          decoration: const BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 6,
+                offset: Offset(0, 2),
+              )
+            ],
+          ),
+          child: CircleAvatar(
+            radius: 20,
+            backgroundColor: Colors.white,
+            backgroundImage: photoUrl.isNotEmpty
+                ? (AuthService.isLocalFile(photoUrl)
+                    ? FileImage(File(photoUrl))
+                    : NetworkImage(photoUrl)) as ImageProvider
+                : null,
+            child: photoUrl.isEmpty
+                ? const Icon(Icons.person, color: Colors.green)
+                : null,
+          ),
+        );
+      },
     ),
   );
 }
@@ -77,7 +96,7 @@ Widget buildTopBar(BuildContext context, String title, {bool isDashboard = false
         ),
       ),
 
-      // ✅ Reusable Profile Icon
+      // ✅ Reusable Profile Icon — Now dynamic
       buildProfileIcon(context),
     ],
   );

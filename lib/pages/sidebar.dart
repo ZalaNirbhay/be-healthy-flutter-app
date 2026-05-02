@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:be_healthy/services/auth_service.dart';
+import 'dart:io';
 import 'dashboard.dart';
 import 'bmi_calculator.dart';
 import 'food_tracker.dart';
@@ -7,8 +9,42 @@ import 'weight_gain.dart';
 import 'progress.dart';
 import 'profile_setting.dart';
 
-class AppSidebar extends StatelessWidget {
+class AppSidebar extends StatefulWidget {
   const AppSidebar({super.key});
+
+  @override
+  State<AppSidebar> createState() => _AppSidebarState();
+}
+
+class _AppSidebarState extends State<AppSidebar> {
+  // 🔥 Dynamic user data
+  String userName = "User";
+  String userEmail = "";
+  String photoUrl = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final data = await AuthService.getUserDocument();
+    if (data != null && mounted) {
+      setState(() {
+        userName = data['name'] ?? "User";
+        userEmail = data['email'] ?? "";
+        photoUrl = data['photo_url'] ?? "";
+      });
+    }
+  }
+
+  // 🔥 TASK 8: Logout
+  Future<void> _logout() async {
+    await AuthService.signOut();
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +96,7 @@ class AppSidebar extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // 🔹 Profile Section
+              // 🔹 Profile Section — Now dynamic
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.all(15),
@@ -73,29 +109,43 @@ class AppSidebar extends StatelessWidget {
                 child: Row(
                   children: [
 
-                    const CircleAvatar(
+                    // 🔥 Dynamic profile image
+                    CircleAvatar(
                       radius: 25,
-                      backgroundImage: AssetImage("assets/images/profile1.jpg",
-                      ),
+                      backgroundColor: Colors.white24,
+                      backgroundImage: photoUrl.isNotEmpty
+                          ? (AuthService.isLocalFile(photoUrl)
+                              ? FileImage(File(photoUrl))
+                              : NetworkImage(photoUrl)) as ImageProvider
+                          : null,
+                      child: photoUrl.isEmpty
+                          ? const Icon(Icons.person, color: Colors.white)
+                          : null,
                     ),
 
                     const SizedBox(width: 15),
 
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          "John Doe",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // 🔥 Dynamic name
+                          Text(
+                            userName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        Text(
-                          "john@behealth.com",
-                          style: TextStyle(color: Colors.white70),
-                        ),
-                      ],
+                          // 🔥 Dynamic email
+                          Text(
+                            userEmail,
+                            style: const TextStyle(color: Colors.white70),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
                     )
                   ],
                 ),
@@ -137,10 +187,8 @@ class AppSidebar extends StatelessWidget {
               // 🔹 Divider
               const Divider(color: Colors.white30, indent: 20, endIndent: 20),
 
-              // 🔹 Logout
-              buildMenuItem(context, Icons.logout, "Logout", false, () {
-                Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-              }),
+              // 🔹 Logout — Now functional
+              buildMenuItem(context, Icons.logout, "Logout", false, _logout),
 
               const SizedBox(height: 20),
             ],

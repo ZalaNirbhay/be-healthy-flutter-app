@@ -1,13 +1,13 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:be_healthy/pages/login.dart';
-import 'package:be_healthy/pages/login.dart';
 import 'package:be_healthy/pages/register.dart';
 import 'package:be_healthy/pages/profile_setup.dart';
 import 'package:be_healthy/pages/dashboard.dart';
 import 'package:be_healthy/pages/profile_setting.dart';
 import 'package:be_healthy/pages/food_tracker.dart';
 import 'package:be_healthy/pages/maintain_calories.dart';
+import 'package:be_healthy/widgets/auth_wrapper.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -28,8 +28,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login',
+      initialRoute: '/',
       routes: {
+        '/': (context) => const AuthWrapper(),
         '/login': (context) => const Login(),
         '/register': (context) => const register(),
         '/profile-setup': (context) => const ProfileSetup(),
@@ -38,49 +39,6 @@ class MyApp extends StatelessWidget {
         '/food-tracker': (context) => const FoodTracker(),
         '/maintain-calories': (context) => const MaintainCalories(),
       },
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text("Be Healthy"),
-      ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage("assets/images/backgroundimg.png"),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: const Center(
-          child: Text(
-            "Stay Fit, Stay Healthy",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              shadows: [
-                Shadow(
-                  blurRadius: 10.0,
-                  color: Colors.black,
-                  offset: Offset(2.0, 2.0),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
