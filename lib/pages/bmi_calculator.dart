@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'dashboard.dart'; // make sure this file exists
+import 'dashboard.dart';
 import 'food_tracker.dart';
 import 'progress.dart';
 import 'profile_setting.dart';
 import '../widgets/custom_top_bar.dart';
+import '../services/auth_service.dart';
 
 class BmiCalculator extends StatefulWidget {
   const BmiCalculator({super.key});
@@ -19,6 +20,28 @@ class _BmiCalculatorState extends State<BmiCalculator> {
   String status = "Normal";
 
   int selectedIndex = 1;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfileData();
+  }
+
+  // 🔥 Prefill from user profile
+  Future<void> _loadProfileData() async {
+    final data = await AuthService.getUserDocument();
+    if (data != null && mounted) {
+      final h = data['height_cm'];
+      final w = data['weight_kg'];
+      if (h != null && w != null) {
+        setState(() {
+          height = (h is int) ? h.toDouble() : h;
+          weight = (w is int) ? w.toDouble() : w;
+        });
+        calculateBMI();
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

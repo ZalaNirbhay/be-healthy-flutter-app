@@ -4,6 +4,11 @@ import 'bmi_calculator.dart';
 import 'food_tracker.dart';
 import 'profile_setting.dart';
 import '../widgets/custom_top_bar.dart';
+import '../services/health_engine.dart';
+import '../services/water_service.dart';
+import '../services/food_service.dart';
+import '../services/progress_service.dart';
+import '../services/plan_service.dart';
 
 class progress extends StatefulWidget {
   const progress({super.key});
@@ -15,8 +20,105 @@ class progress extends StatefulWidget {
 class _progressState extends State<progress> {
   int selectedTab = 0;
   int currentIndex = 2;
+  bool isLoading = true;
 
   List<String> tabs = ["Weight", "BMI", "Calories"];
+
+  // Dynamic data
+  Map<String, dynamic> snapshot = {};
+  Map<String, dynamic> weeklySummary = {};
+  List<Map<String, dynamic>> activityLog = [];
+  List<String> progressInsights = [];
+  int planAdherence = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final data = await HealthEngine.getDashboardSnapshot();
+    final entries = data['food_entries'] as List<Map<String, dynamic>>? ?? [];
+
+    // Auto-save today's progress snapshot
+    await ProgressService.autoSaveToday(
+      calories: data['consumed'] ?? 0,
+      water: data['water_ml'] ?? 0,
+      healthScore: data['health_score'] ?? 0,
+    );
+
+    // Fetch weekly summary + plan adherence
+    final weekly = await ProgressService.getWeeklySummary();
+    final adherence = await PlanService.calculateAdherenceScore();
+    final insights = ProgressService.generateInsights(weekly);
+
+    // Build dynamic activity log from today's real data
+    List<Map<String, dynamic>> log = [];
+
+    // Water activity
+    final waterMl = data['water_ml'] ?? 0;
+    if (waterMl > 0) {
+      log.add({
+        'icon': Icons.water_drop,
+        'title': 'Logged ${WaterService.formatWater(waterMl)} Water',
+        'time': 'Today',
+        'color': Colors.blue,
+      });
+    }
+
+    // Food entries
+    for (var entry in entries) {
+      log.add({
+        'icon': FoodService.getMealIcon(entry['meal_type'] ?? 'Snack'),
+        'title': 'Logged ${entry['meal_type']}: ${entry['food_name']}',
+        'time': '${entry['calories'] ?? 0} kcal',
+        'color': Colors.green,
+      });
+    }
+
+    // Plan adherence
+    if (adherence > 0) {
+      log.add({
+        'icon': Icons.assignment_turned_in,
+        'title': 'Plan Adherence: $adherence%',
+        'time': adherence >= 80 ? 'Great job!' : 'Keep going!',
+        'color': adherence >= 80 ? Colors.green : Colors.orange,
+      });
+    }
+
+    // Health score
+    final score = data['health_score'] ?? 0;
+    if (score > 0) {
+      log.add({
+        'icon': Icons.favorite,
+        'title': 'Health Score: $score/100',
+        'time': 'Today',
+        'color': Colors.red,
+      });
+    }
+
+    // If no activity
+    if (log.isEmpty) {
+      log.add({
+        'icon': Icons.hourglass_empty,
+        'title': 'No activity logged yet today',
+        'time': 'Start tracking to see progress!',
+        'color': Colors.grey,
+      });
+    }
+
+    if (mounted) {
+      setState(() {
+        snapshot = data;
+        weeklySummary = weekly;
+        activityLog = log;
+        progressInsights = insights;
+        planAdherence = adherence;
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +150,43 @@ class _progressState extends State<progress> {
 
                 buildProgressCard(),
 
-                const SizedBox(height: 25),
+                const SizedBox(height: 20),
+
+                // Weekly Summary Stats
+                if (!isLoading && weeklySummary.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(15),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.7),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildStat("${weeklySummary['avg_calories'] ?? 0}", "Avg Cal"),
+                        _buildStat("${weeklySummary['consistency_score'] ?? 0}%", "Consistency"),
+                        _buildStat("${weeklySummary['total_days_tracked'] ?? 0}/7", "Days"),
+                      ],
+                    ),
+                  ),
+
+                const SizedBox(height: 15),
+
+                // Progress Insights
+                if (!isLoading && progressInsights.isNotEmpty) ...[
+                  const Text("Insights", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  ...progressInsights.map((insight) => Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Text(insight, style: const TextStyle(fontSize: 13)),
+                  )),
+                  const SizedBox(height: 15),
+                ],
 
                 const Text(
                   "Activity Log",
@@ -60,33 +198,21 @@ class _progressState extends State<progress> {
 
                 const SizedBox(height: 15),
 
-                buildActivityItem(
-                  Icons.water_drop,
-                  "Logged 500ml Water",
-                  "Today, 10:30 AM",
-                  Colors.blue,
-                ),
-
-                buildActivityItem(
-                  Icons.monitor_weight,
-                  "Updated Weight: 70kg",
-                  "Today, 8:00 AM",
-                  Colors.green,
-                ),
-
-                buildActivityItem(
-                  Icons.directions_walk,
-                  "Goal Completed: 10k Steps",
-                  "Yesterday, 6:45 PM",
-                  Colors.orange,
-                ),
-
-                buildActivityItem(
-                  Icons.restaurant,
-                  "Logged Lunch: 650 kcal",
-                  "Yesterday, 1:15 PM",
-                  Colors.purple,
-                ),
+                // 🔥 Dynamic activity log
+                if (isLoading)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(color: Colors.green),
+                    ),
+                  )
+                else
+                  ...activityLog.map((item) => buildActivityItem(
+                    item['icon'],
+                    item['title'],
+                    item['time'],
+                    item['color'],
+                  )),
               ],
             ),
           ),
@@ -95,8 +221,6 @@ class _progressState extends State<progress> {
       bottomNavigationBar: buildBottomNav(context),
     );
   }
-
-  // Top Bar removed, moved to custom_top_bar.dart
 
   // 🔹 TABS
   Widget buildTabs() {
@@ -143,8 +267,33 @@ class _progressState extends State<progress> {
     );
   }
 
-  // 🔹 PROGRESS CARD
+  // 🔹 PROGRESS CARD — Dynamic based on selected tab
   Widget buildProgressCard() {
+    String mainValue = "--";
+    String subtitle = "";
+    String progressLabel = "WEEKLY PROGRESS";
+
+    if (!isLoading) {
+      switch (selectedTab) {
+        case 0: // Weight
+          final weight = snapshot['weight_kg'] ?? (snapshot['user_name'] != null ? 0 : 0);
+          final w = _getProfileField('weight_kg');
+          mainValue = w != null ? "${w}kg" : "--";
+          subtitle = "Current weight from profile";
+          break;
+        case 1: // BMI
+          final bmi = (snapshot['bmi'] ?? 0.0).toDouble();
+          mainValue = bmi > 0 ? bmi.toStringAsFixed(1) : "--";
+          subtitle = _getBMIStatus(bmi);
+          break;
+        case 2: // Calories
+          mainValue = "${snapshot['consumed'] ?? 0} kcal";
+          subtitle = "of ${snapshot['target_calories'] ?? 2000} kcal target";
+          progressLabel = "TODAY'S INTAKE";
+          break;
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
 
@@ -157,31 +306,35 @@ class _progressState extends State<progress> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
-          const Text(
-            "WEEKLY PROGRESS",
-            style: TextStyle(color: Colors.black54),
+          Text(
+            progressLabel,
+            style: const TextStyle(color: Colors.black54),
           ),
 
           const SizedBox(height: 10),
 
-          const Text(
-            "Current: 70kg",
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: Colors.green),
+                )
+              : Text(
+                  mainValue,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
 
           const SizedBox(height: 5),
 
-          const Text(
-            "-1.5kg this week",
-            style: TextStyle(color: Colors.green),
+          Text(
+            subtitle,
+            style: const TextStyle(color: Colors.green),
           ),
 
           const SizedBox(height: 20),
 
-          // Fake Graph
+          // Progress bar
           Container(
             height: 150,
             decoration: BoxDecoration(
@@ -189,6 +342,37 @@ class _progressState extends State<progress> {
               gradient: const LinearGradient(
                 colors: [Colors.green, Colors.teal],
               ),
+            ),
+            child: Center(
+              child: isLoading
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Health Score",
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 14,
+                          ),
+                        ),
+                        Text(
+                          "${snapshot['health_score'] ?? 0}/100",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          _getScoreLabel(snapshot['health_score'] ?? 0),
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
             ),
           ),
 
@@ -208,6 +392,16 @@ class _progressState extends State<progress> {
           )
         ],
       ),
+    );
+  }
+
+  Widget _buildStat(String value, String label) {
+    return Column(
+      children: [
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+      ],
     );
   }
 
@@ -250,10 +444,32 @@ class _progressState extends State<progress> {
     );
   }
 
+  // Helpers
+  dynamic _getProfileField(String field) {
+    // Try to get from snapshot indirectly
+    return null; // Will come from profile data
+  }
+
+  String _getBMIStatus(double bmi) {
+    if (bmi == 0) return "Calculate your BMI";
+    if (bmi < 18.5) return "Underweight";
+    if (bmi < 25) return "Normal — Great!";
+    if (bmi < 30) return "Overweight";
+    return "Obese";
+  }
+
+  String _getScoreLabel(int score) {
+    if (score >= 80) return "Excellent";
+    if (score >= 60) return "Good";
+    if (score >= 40) return "Fair";
+    if (score > 0) return "Needs Improvement";
+    return "Start Tracking!";
+  }
+
   // 🔹 BOTTOM NAV
   Widget buildBottomNav(BuildContext context) {
     return BottomNavigationBar(
-      currentIndex: 3, // Progress is index 3
+      currentIndex: 3,
       type: BottomNavigationBarType.fixed,
       selectedItemColor: Colors.green,
       unselectedItemColor: Colors.grey,
