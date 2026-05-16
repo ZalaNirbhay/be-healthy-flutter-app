@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'bmi_calculator.dart';
 import 'sidebar.dart';
 import 'food_tracker.dart';
@@ -12,6 +12,9 @@ import '../services/water_service.dart';
 import '../services/health_engine.dart';
 import '../services/food_service.dart';
 import '../services/progress_service.dart';
+import '../services/notification_service.dart';
+import '../services/goal_service.dart';
+import '../services/theme_service.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -21,25 +24,38 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
-  // 🔥 Dashboard data from Health Engine
   Map<String, dynamic> snapshot = {};
   bool isLoading = true;
   bool isLoggingWater = false;
+  int streak = 0;
 
   @override
   void initState() {
     super.initState();
     _loadDashboard();
+    ThemeService.themeMode.addListener(_onThemeChange);
+  }
+
+  @override
+  void dispose() {
+    ThemeService.themeMode.removeListener(_onThemeChange);
+    super.dispose();
+  }
+
+  void _onThemeChange() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadDashboard() async {
-    // Seed food database on first launch
     await FoodService.seedFoodDatabase();
 
     final data = await HealthEngine.getDashboardSnapshot();
+    final currentStreak = await GoalService.calculateStreak();
+
     if (mounted) {
       setState(() {
         snapshot = data;
+        streak = currentStreak;
         isLoading = false;
       });
 
@@ -48,6 +64,17 @@ class _DashboardState extends State<Dashboard> {
         calories: data['consumed'] ?? 0,
         water: data['water_ml'] ?? 0,
         healthScore: data['health_score'] ?? 0,
+      );
+
+      // Generate smart notifications
+      NotificationService.generateSmartNotifications(
+        consumed: data['consumed'] ?? 0,
+        target: data['target_calories'] ?? 2000,
+        waterMl: data['water_ml'] ?? 0,
+        waterGoal: data['water_goal'] ?? 3000,
+        healthScore: data['health_score'] ?? 0,
+        protein: data['protein'] ?? 0,
+        foodEntries: List<Map<String, dynamic>>.from(data['food_entries'] ?? []),
       );
     }
   }
@@ -67,7 +94,7 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
-  // Getters for cleaner code
+  // Getters
   int get targetCalories => snapshot['target_calories'] ?? 2000;
   int get consumed => snapshot['consumed'] ?? 0;
   int get remaining => snapshot['remaining'] ?? 2000;
@@ -88,66 +115,55 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
+    // ThemeService accessed directly
     return Scaffold(
       drawer: const AppSidebar(),
       backgroundColor: Colors.transparent,
 
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF6FCF97), Color(0xFFDFF5EA)],
+            colors: ThemeService.dashboardGradient,
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
-
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
-
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 buildTopBar(context, "BeHealth", isDashboard: true),
                 const SizedBox(height: 20),
 
-                // 🔥 Dynamic greeting
                 Text(
                   "Welcome Back!",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
+                    color: ThemeService.textPrimary,
                   ),
                 ),
-
                 const SizedBox(height: 20),
 
-                // 🔥 Health Score + Status Card
                 _buildHealthScoreCard(),
-
                 const SizedBox(height: 20),
-
-                // 🔥 Dynamic Progress Card
                 _buildProgressCard(),
-
                 const SizedBox(height: 20),
 
-                // 🔥 Smart Insights
                 if (!isLoading && feedback.isNotEmpty) ...[
                   _buildInsightsSection(),
                   const SizedBox(height: 20),
                 ],
 
-                // 🔥 Meal Suggestions
                 if (!isLoading && mealSuggestions.isNotEmpty) ...[
                   _buildMealSuggestions(),
                   const SizedBox(height: 20),
                 ],
 
                 buildToolsSection(context),
-
                 const SizedBox(height: 25),
-
                 _buildQuickActions(),
               ],
             ),
@@ -158,23 +174,23 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  // ═══════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  HEALTH SCORE + STATUS CARD
-  // ═══════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildHealthScoreCard() {
     final statusLabel = status['label'] ?? 'Loading';
     final statusColor = _getStatusColor(status['color']);
+    // ThemeService accessed directly
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.3),
+        color: ThemeService.surfaceColor,
         borderRadius: BorderRadius.circular(25),
       ),
       child: Row(
         children: [
-          // Health Score Circle
           Stack(
             alignment: Alignment.center,
             children: [
@@ -185,64 +201,53 @@ class _DashboardState extends State<Dashboard> {
                   value: isLoading ? 0 : healthScore / 100,
                   strokeWidth: 6,
                   color: _getScoreColor(healthScore),
-                  backgroundColor: Colors.white.withOpacity(0.3),
+                  backgroundColor: ThemeService.cardColorLight,
                 ),
               ),
               isLoading
                   ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.green,
-                      ),
+                      width: 20, height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.green),
                     )
-                  : Text(
-                      "$healthScore",
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                  : Text("$healthScore",
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
             ],
           ),
-
           const SizedBox(width: 18),
-
-          // Status + Info
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "Daily Health Score",
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
+                Row(
+                  children: [
+                    Text("Daily Health Score",
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: ThemeService.textPrimary)),
+                    if (streak > 0) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text("ðŸ”¥ $streak", style: const TextStyle(fontSize: 12)),
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 12, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Text(
-                    statusLabel,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
+                  child: Text(statusLabel,
+                      style: TextStyle(color: statusColor, fontWeight: FontWeight.w600, fontSize: 13)),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  "$consumed / $targetCalories kcal consumed",
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
-                ),
+                Text("$consumed / $targetCalories kcal consumed",
+                    style: TextStyle(fontSize: 12, color: ThemeService.textSecondary)),
               ],
             ),
           ),
@@ -251,46 +256,33 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  // ═══════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  PROGRESS CARD (BMI + Water)
-  // ═══════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildProgressCard() {
+    // ThemeService accessed directly
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.3),
+        color: ThemeService.surfaceColor,
         borderRadius: BorderRadius.circular(25),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Daily Progress",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-          const Text("BMI and Hydration Tracking"),
+          Text("Daily Progress",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: ThemeService.textPrimary)),
+          Text("BMI and Hydration Tracking", style: TextStyle(color: ThemeService.textSecondary)),
           const SizedBox(height: 20),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              buildCircle(
-                bmi > 0 ? bmi.toStringAsFixed(1) : "--",
-                "BMI",
-                Colors.green,
-              ),
-              Container(height: 80, width: 1, color: Colors.white),
-              buildCircle(
-                WaterService.formatWater(waterMl),
-                "WATER",
-                Colors.blue,
-              ),
+              buildCircle(bmi > 0 ? bmi.toStringAsFixed(1) : "--", "BMI", Colors.green),
+              Container(height: 80, width: 1, color: ThemeService.dividerColor),
+              buildCircle(WaterService.formatWater(waterMl), "WATER", Colors.blue),
             ],
           ),
-          // Macro summary row
           if (!isLoading && consumed > 0) ...[
             const SizedBox(height: 15),
             Row(
@@ -314,35 +306,30 @@ class _DashboardState extends State<Dashboard> {
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(15),
       ),
-      child: Text(
-        "$label $value",
-        style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600),
-      ),
+      child: Text("$label $value",
+          style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
     );
   }
 
-  // ═══════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  SMART INSIGHTS SECTION
-  // ═══════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildInsightsSection() {
+    // ThemeService accessed directly
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Smart Insights",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
+        Text("Smart Insights",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
         const SizedBox(height: 10),
         ...feedback.map((insight) {
           final type = insight['type'] ?? 'info';
           final color = type == 'warning'
               ? Colors.orange
-              : type == 'success'
-                  ? Colors.green
-                  : type == 'nudge'
-                      ? Colors.blue
-                      : Colors.teal;
+              : type == 'success' ? Colors.green
+              : type == 'nudge' ? Colors.blue
+              : Colors.teal;
 
           return Container(
             margin: const EdgeInsets.only(bottom: 8),
@@ -356,12 +343,8 @@ class _DashboardState extends State<Dashboard> {
               children: [
                 Icon(_getInsightIcon(insight['icon']), color: color, size: 22),
                 const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    insight['message'] ?? '',
-                    style: TextStyle(fontSize: 13, color: color.withOpacity(0.9)),
-                  ),
-                ),
+                Expanded(child: Text(insight['message'] ?? '',
+                    style: TextStyle(fontSize: 13, color: color))),
               ],
             ),
           );
@@ -370,18 +353,17 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  // ═══════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  SMART MEAL SUGGESTIONS
-  // ═══════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildMealSuggestions() {
+    // ThemeService accessed directly
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Suggested for $remaining kcal remaining",
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
+        Text("Suggested for $remaining kcal remaining",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
         const SizedBox(height: 10),
         SizedBox(
           height: 90,
@@ -393,34 +375,21 @@ class _DashboardState extends State<Dashboard> {
                 margin: const EdgeInsets.only(right: 10),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.6),
+                  color: ThemeService.cardColor,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      food['name'] ?? '',
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    Text(food['name'] ?? '',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: ThemeService.textPrimary),
+                        overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
-                    Text(
-                      "${food['calories']} kcal",
-                      style: const TextStyle(
-                        color: Colors.green,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      "${food['serving']}g serving",
-                      style: const TextStyle(fontSize: 11, color: Colors.black54),
-                    ),
+                    Text("${food['calories']} kcal",
+                        style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600)),
+                    Text("${food['serving']}g serving",
+                        style: TextStyle(fontSize: 11, color: ThemeService.textSecondary)),
                   ],
                 ),
               );
@@ -431,18 +400,17 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  // ═══════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  QUICK ACTIONS (Water + Food)
-  // ═══════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Widget _buildQuickActions() {
+    // ThemeService accessed directly
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          "Quick Actions",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
+        Text("Quick Actions",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
         const SizedBox(height: 15),
         Row(
           children: [
@@ -452,22 +420,18 @@ class _DashboardState extends State<Dashboard> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.6),
+                    color: ThemeService.cardColor,
                     borderRadius: BorderRadius.circular(30),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       isLoggingWater
-                          ? const SizedBox(
-                              width: 18, height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.blue,
-                              ),
-                            )
-                          : const Icon(Icons.water_drop),
+                          ? const SizedBox(width: 18, height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.blue))
+                          : Icon(Icons.water_drop, color: ThemeService.textPrimary),
                       const SizedBox(width: 5),
-                      const Text("Log Water"),
+                      Text("Log Water", style: TextStyle(color: ThemeService.textPrimary)),
                     ],
                   ),
                 ),
@@ -477,23 +441,21 @@ class _DashboardState extends State<Dashboard> {
             Expanded(
               child: GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const FoodTracker()),
-                  ).then((_) => _loadDashboard());
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const FoodTracker()))
+                      .then((_) => _loadDashboard());
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.6),
+                    color: ThemeService.cardColor,
                     borderRadius: BorderRadius.circular(30),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.fastfood),
-                      SizedBox(width: 5),
-                      Text("Add Food"),
+                      Icon(Icons.fastfood, color: ThemeService.textPrimary),
+                      const SizedBox(width: 5),
+                      Text("Add Food", style: TextStyle(color: ThemeService.textPrimary)),
                     ],
                   ),
                 ),
@@ -505,9 +467,9 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  // ═══════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
   //  HELPERS
-  // ═══════════════════════════════════════════
+  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   Color _getStatusColor(String? colorName) {
     switch (colorName) {
@@ -538,9 +500,10 @@ class _DashboardState extends State<Dashboard> {
   }
 }
 
-//////////////////// PROGRESS ////////////////////
+//////////////////// CIRCLES ////////////////////
 
 Widget buildCircle(String value, String label, Color color) {
+  // ThemeService accessed directly
   return Column(
     children: [
       Container(
@@ -550,14 +513,12 @@ Widget buildCircle(String value, String label, Color color) {
           border: Border.all(color: color, width: 6),
         ),
         child: Center(
-          child: Text(
-            value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
+          child: Text(value,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
         ),
       ),
       const SizedBox(height: 5),
-      Text(label),
+      Text(label, style: TextStyle(color: ThemeService.textSecondary)),
     ],
   );
 }
@@ -565,13 +526,12 @@ Widget buildCircle(String value, String label, Color color) {
 //////////////////// TOOLS ////////////////////
 
 Widget buildToolsSection(BuildContext context) {
+  // ThemeService accessed directly
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const Text(
-        "Tools",
-        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-      ),
+      Text("Tools",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
       const SizedBox(height: 15),
       GridView.count(
         crossAxisCount: 2,
@@ -607,22 +567,23 @@ Widget buildToolsSection(BuildContext context) {
 }
 
 Widget buildToolCard(IconData icon, String title, String subtitle) {
+  // ThemeService accessed directly
   return Container(
     padding: const EdgeInsets.all(15),
     decoration: BoxDecoration(
-      color: Colors.white.withOpacity(0.5),
+      color: ThemeService.cardColorLight,
       borderRadius: BorderRadius.circular(20),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         CircleAvatar(
-          backgroundColor: Colors.white,
+          backgroundColor: ThemeService.isDark ? const Color(0xFF2D4A6E) : Colors.white,
           child: Icon(icon, color: Colors.green),
         ),
         const Spacer(),
-        Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        Text(subtitle, style: const TextStyle(color: Colors.black54)),
+        Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
+        Text(subtitle, style: TextStyle(color: ThemeService.textSecondary)),
       ],
     ),
   );
@@ -636,6 +597,7 @@ Widget buildBottomNav(BuildContext context) {
     type: BottomNavigationBarType.fixed,
     selectedItemColor: Colors.green,
     unselectedItemColor: Colors.grey,
+    backgroundColor: ThemeService.isDark ? const Color(0xFF1A1A2E) : Colors.white,
     onTap: (index) {
       if (index == 0) return;
       if (index == 1) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const BmiCalculator()));

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:be_healthy/services/auth_service.dart';
+import 'package:be_healthy/services/theme_service.dart';
 import 'dart:io';
 import 'dashboard.dart';
 import 'bmi_calculator.dart';
@@ -50,9 +51,9 @@ class _AppSidebarState extends State<AppSidebar> {
   Widget build(BuildContext context) {
     return Drawer(
       child: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF6FCF97), Color(0xFFB7E4C7)],
+            colors: ThemeService.sidebarGradient,
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

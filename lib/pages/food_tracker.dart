@@ -6,6 +6,7 @@ import 'profile_setting.dart';
 import '../widgets/custom_top_bar.dart';
 import '../services/food_service.dart';
 import '../services/calorie_service.dart';
+import '../services/theme_service.dart';
 
 class FoodTracker extends StatefulWidget {
   const FoodTracker({super.key});
@@ -77,9 +78,9 @@ class _FoodTrackerState extends State<FoodTracker> {
       ),
 
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFDFF5EA), Color(0xFFB7E4C7)],
+            colors: ThemeService.pageGradient,
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

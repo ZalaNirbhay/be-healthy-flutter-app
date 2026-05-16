@@ -5,6 +5,7 @@ import 'progress.dart';
 import 'profile_setting.dart';
 import '../widgets/custom_top_bar.dart';
 import '../services/auth_service.dart';
+import '../services/theme_service.dart';
 
 class BmiCalculator extends StatefulWidget {
   const BmiCalculator({super.key});
@@ -47,9 +48,9 @@ class _BmiCalculatorState extends State<BmiCalculator> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFDFF5EA), Color(0xFFB7E4C7)],
+            colors: ThemeService.pageGradient,
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -325,10 +326,11 @@ class _BmiCalculatorState extends State<BmiCalculator> {
   // 🔹 Bottom Navigation
   Widget buildBottomNav(BuildContext context) {
     return BottomNavigationBar(
-      currentIndex: 1, // BMI index is 1
+      currentIndex: 1,
       type: BottomNavigationBarType.fixed,
       selectedItemColor: Colors.green,
       unselectedItemColor: Colors.grey,
+      backgroundColor: ThemeService.isDark ? const Color(0xFF1A1A2E) : Colors.white,
 
       onTap: (index) {
         if (index == 1) return;

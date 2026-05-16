@@ -9,6 +9,7 @@ import '../services/water_service.dart';
 import '../services/food_service.dart';
 import '../services/progress_service.dart';
 import '../services/plan_service.dart';
+import '../services/theme_service.dart';
 
 class progress extends StatefulWidget {
   const progress({super.key});
@@ -126,9 +127,9 @@ class _progressState extends State<progress> {
       backgroundColor: Colors.transparent,
 
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFDFF5EA), Color(0xFF6FCF97)],
+            colors: ThemeService.pageGradient,
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

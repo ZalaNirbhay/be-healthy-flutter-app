@@ -8,6 +8,7 @@ import '../widgets/custom_top_bar.dart';
 import '../services/calorie_service.dart';
 import '../services/auth_service.dart';
 import '../services/plan_service.dart';
+import '../services/theme_service.dart';
 
 class WeightGain extends StatefulWidget {
   const WeightGain({super.key});
@@ -199,9 +200,9 @@ class _WeightGainState extends State<WeightGain> {
       backgroundColor: Colors.transparent,
 
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFDFF5EA), Color(0xFFB7E4C7)],
+            colors: ThemeService.pageGradient,
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),

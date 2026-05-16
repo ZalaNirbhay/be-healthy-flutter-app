@@ -29,7 +29,17 @@ class AuthService {
     }
   }
 
-  // ─── Google Sign-In ───
+  // ─── Update User Document ───
+  static Future<void> updateUserDocument(Map<String, dynamic> updates) async {
+    try {
+      final user = currentUser;
+      if (user == null) return;
+
+      updates['updated_at'] = FieldValue.serverTimestamp();
+      await _firestore.collection('users').doc(user.uid).update(updates);
+    } catch (_) {}
+  }
+
   static Future<Map<String, dynamic>> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();

@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:be_healthy/services/auth_service.dart';
+import 'package:be_healthy/services/theme_service.dart';
+import 'package:be_healthy/services/notification_service.dart';
 import 'dart:io';
 import '../pages/dashboard.dart';
 import '../pages/profile_setting.dart';
 
-// 🔹 REUSABLE PROFILE ICON — Now shows dynamic user photo
+// ðŸ”¹ REUSABLE PROFILE ICON â€” Dynamic with theme support
 Widget buildProfileIcon(BuildContext context) {
   return GestureDetector(
     onTap: () {
@@ -22,19 +24,23 @@ Widget buildProfileIcon(BuildContext context) {
         }
 
         return Container(
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black26,
+                color: ThemeService.isDark
+                    ? Colors.black54
+                    : Colors.black26,
                 blurRadius: 6,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               )
             ],
           ),
           child: CircleAvatar(
             radius: 20,
-            backgroundColor: Colors.white,
+            backgroundColor: ThemeService.isDark
+                ? const Color(0xFF2D4A6E)
+                : Colors.white,
             backgroundImage: photoUrl.isNotEmpty
                 ? (AuthService.isLocalFile(photoUrl)
                     ? FileImage(File(photoUrl))
@@ -50,18 +56,59 @@ Widget buildProfileIcon(BuildContext context) {
   );
 }
 
-// 🔹 REUSABLE TOP BAR
+// ðŸ”¹ NOTIFICATION BELL
+Widget buildNotificationBell(BuildContext context) {
+  return FutureBuilder<int>(
+    future: NotificationService.getUnreadCount(),
+    builder: (context, snapshot) {
+      final count = snapshot.data ?? 0;
+      return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ProfileSetting()),
+          );
+        },
+        child: Stack(
+          children: [
+            Icon(Icons.notifications_outlined,
+                size: 26, color: ThemeService.textPrimary),
+            if (count > 0)
+              Positioned(
+                right: 0,
+                top: 0,
+                child: Container(
+                  padding: const EdgeInsets.all(2),
+                  decoration: const BoxDecoration(
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                  constraints: const BoxConstraints(minWidth: 14, minHeight: 14),
+                  child: Text('$count',
+                      style: const TextStyle(color: Colors.white, fontSize: 9),
+                      textAlign: TextAlign.center),
+                ),
+              ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+// ðŸ”¹ REUSABLE TOP BAR â€” Theme-aware
 Widget buildTopBar(BuildContext context, String title, {bool isDashboard = false}) {
+  // ThemeService accessed directly
   return Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
       
-      // ✅ Dynamic Left Navigation Element
+      // Left navigation
       if (isDashboard)
         Builder(
           builder: (context) {
             return IconButton(
-              icon: const Icon(Icons.menu, size: 28),
+              icon: Icon(Icons.menu, size: 28, color: ThemeService.textPrimary),
               onPressed: () {
                 Scaffold.of(context).openDrawer();
               },
@@ -71,7 +118,6 @@ Widget buildTopBar(BuildContext context, String title, {bool isDashboard = false
       else
         GestureDetector(
           onTap: () {
-            // ✅ Fallback to Dashboard if pushed from a stackless context 
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
             } else {
@@ -81,23 +127,33 @@ Widget buildTopBar(BuildContext context, String title, {bool isDashboard = false
               );
             }
           },
-          child: const Padding(
-            padding: EdgeInsets.all(5.0),
-            child: Icon(Icons.arrow_back, size: 28),
+          child: Padding(
+            padding: const EdgeInsets.all(5.0),
+            child: Icon(Icons.arrow_back, size: 28, color: ThemeService.textPrimary),
           ),
         ),
 
-      // ✅ Standardized Title
+      // Title
       Text(
         title,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.bold,
+          color: ThemeService.textPrimary,
         ),
       ),
 
-      // ✅ Reusable Profile Icon — Now dynamic
-      buildProfileIcon(context),
+      // Right side: notification bell (dashboard) or profile icon
+      if (isDashboard)
+        Row(
+          children: [
+            buildNotificationBell(context),
+            const SizedBox(width: 10),
+            buildProfileIcon(context),
+          ],
+        )
+      else
+        buildProfileIcon(context),
     ],
   );
 }
