@@ -5,10 +5,12 @@ import 'food_tracker.dart';
 import 'progress.dart';
 import 'profile_setting.dart';
 import '../widgets/custom_top_bar.dart';
+import '../widgets/bottom_nav.dart';
 import '../services/calorie_service.dart';
 import '../services/auth_service.dart';
 import '../services/plan_service.dart';
 import '../services/theme_service.dart';
+import '../theme/app_theme.dart';
 
 class WeightLoose extends StatefulWidget {
   const WeightLoose({super.key});
@@ -31,6 +33,17 @@ class _WeightLooseState extends State<WeightLoose> {
   void initState() {
     super.initState();
     _loadData();
+    ThemeService.themeMode.addListener(_onThemeChange);
+  }
+
+  @override
+  void dispose() {
+    ThemeService.themeMode.removeListener(_onThemeChange);
+    super.dispose();
+  }
+
+  void _onThemeChange() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadData() async {
@@ -93,9 +106,9 @@ class _WeightLooseState extends State<WeightLoose> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.8,
-        decoration: const BoxDecoration(
-          color: Color(0xFFF5FFF8),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        decoration: BoxDecoration(
+          color: ThemeService.bottomSheetColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
         ),
         child: Column(
           children: [
@@ -154,7 +167,7 @@ class _WeightLooseState extends State<WeightLoose> {
                       margin: const EdgeInsets.only(bottom: 8),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: ThemeService.solidCardColor,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Column(
@@ -178,7 +191,7 @@ class _WeightLooseState extends State<WeightLoose> {
                     margin: const EdgeInsets.only(bottom: 6),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: ThemeService.solidCardColor,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Row(
@@ -290,7 +303,7 @@ class _WeightLooseState extends State<WeightLoose> {
         ),
       ),
 
-      bottomNavigationBar: buildBottomNav(context),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
     );
   }
 
@@ -303,8 +316,8 @@ class _WeightLooseState extends State<WeightLoose> {
     return Container(
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(30),
+        color: ThemeService.selectorBackground,
+        borderRadius: AppRadius.xxlBorder,
       ),
 
       child: Row(
@@ -320,18 +333,19 @@ class _WeightLooseState extends State<WeightLoose> {
                 _recalculate();
               },
 
-              child: Container(
+              child: AnimatedContainer(
+                duration: AppDurations.fast,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.white : Colors.transparent,
-                  borderRadius: BorderRadius.circular(25),
+                  color: isSelected ? ThemeService.chipSelectedColor : Colors.transparent,
+                  borderRadius: AppRadius.xlBorder,
                 ),
 
                 child: Center(
                   child: Text(
                     "$goal kg",
                     style: TextStyle(
-                      color: isSelected ? Colors.green : Colors.black54,
+                      color: isSelected ? ThemeService.accent : ThemeService.chipUnselectedText,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -347,20 +361,20 @@ class _WeightLooseState extends State<WeightLoose> {
   // 🔹 CALORIES CARD
   Widget buildCaloriesCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
 
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(25),
+        color: ThemeService.cardColor,
+        borderRadius: AppRadius.xlBorder,
       ),
 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
-          const Text(
+          Text(
             "TARGET CALORIES",
-            style: TextStyle(color: Colors.black54),
+            style: TextStyle(color: ThemeService.textSecondary),
           ),
 
           const SizedBox(height: 10),
@@ -386,11 +400,11 @@ class _WeightLooseState extends State<WeightLoose> {
   // 🔹 PROGRESS CARD
   Widget buildProgressCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
 
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(25),
+        color: ThemeService.cardColor,
+        borderRadius: AppRadius.xlBorder,
       ),
 
       child: Column(
@@ -401,11 +415,12 @@ class _WeightLooseState extends State<WeightLoose> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
 
-              const Text(
+              Text(
                 "Projected Progress",
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
+                  color: ThemeService.textPrimary,
                 ),
               ),
 
@@ -413,12 +428,12 @@ class _WeightLooseState extends State<WeightLoose> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.2),
+                  color: ThemeService.accent.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   "-${selectedGoal}kg/wk",
-                  style: const TextStyle(color: Colors.green),
+                  style: TextStyle(color: ThemeService.accent),
                 ),
               )
             ],
@@ -454,11 +469,11 @@ class _WeightLooseState extends State<WeightLoose> {
   // 🔹 TIP CARD
   Widget buildTipCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
 
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(25),
+        color: ThemeService.cardColorStrong,
+        borderRadius: AppRadius.xlBorder,
       ),
 
       child: Row(
@@ -556,9 +571,9 @@ class _WeightLooseState extends State<WeightLoose> {
       child: ElevatedButton(
         onPressed: isGenerating ? null : _startPlan,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
+          backgroundColor: ThemeService.accent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: AppRadius.xxlBorder,
           ),
         ),
         child: isGenerating
@@ -568,7 +583,7 @@ class _WeightLooseState extends State<WeightLoose> {
               )
             : const Text(
                 "Start Plan →",
-                style: TextStyle(fontSize: 18, color: Colors.black),
+                style: TextStyle(fontSize: 18, color: Colors.white),
               ),
       ),
     );

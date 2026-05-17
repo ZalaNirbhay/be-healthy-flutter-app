@@ -5,10 +5,12 @@ import 'food_tracker.dart';
 import 'progress.dart';
 import 'profile_setting.dart';
 import '../widgets/custom_top_bar.dart';
+import '../widgets/bottom_nav.dart';
 import '../services/calorie_service.dart';
 import '../services/auth_service.dart';
 import '../services/plan_service.dart';
 import '../services/theme_service.dart';
+import '../theme/app_theme.dart';
 
 class WeightGain extends StatefulWidget {
   const WeightGain({super.key});
@@ -33,6 +35,17 @@ class _WeightGainState extends State<WeightGain> {
   void initState() {
     super.initState();
     _loadData();
+    ThemeService.themeMode.addListener(_onThemeChange);
+  }
+
+  @override
+  void dispose() {
+    ThemeService.themeMode.removeListener(_onThemeChange);
+    super.dispose();
+  }
+
+  void _onThemeChange() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadData() async {
@@ -89,9 +102,9 @@ class _WeightGainState extends State<WeightGain> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         height: MediaQuery.of(context).size.height * 0.8,
-        decoration: const BoxDecoration(
-          color: Color(0xFFF5FFF8),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+        decoration: BoxDecoration(
+          color: ThemeService.bottomSheetColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
         ),
         child: Column(
           children: [
@@ -269,7 +282,7 @@ class _WeightGainState extends State<WeightGain> {
         ),
       ),
 
-      bottomNavigationBar: buildBottomNav(context),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
     );
   }
 
@@ -283,10 +296,10 @@ class _WeightGainState extends State<WeightGain> {
       child: Container(
         padding: const EdgeInsets.all(20),
 
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(25),
-        ),
+      decoration: BoxDecoration(
+        color: ThemeService.cardColor,
+        borderRadius: AppRadius.xlBorder,
+      ),
 
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,8 +315,8 @@ class _WeightGainState extends State<WeightGain> {
 
             const SizedBox(height: 5),
 
-            const Text("Set your desired goal",
-                style: TextStyle(color: Colors.black54)),
+            Text("Set your desired goal",
+                style: TextStyle(color: ThemeService.textSecondary)),
 
             const SizedBox(height: 15),
 
@@ -352,8 +365,8 @@ class _WeightGainState extends State<WeightGain> {
     return Container(
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(30),
+        color: ThemeService.selectorBackground,
+        borderRadius: AppRadius.xxlBorder,
       ),
 
       child: Row(
@@ -368,22 +381,23 @@ class _WeightGainState extends State<WeightGain> {
                 });
               },
 
-              child: Container(
+              child: AnimatedContainer(
+                duration: AppDurations.fast,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.white : Colors.transparent,
-                  borderRadius: BorderRadius.circular(25),
+                  color: isSelected ? ThemeService.chipSelectedColor : Colors.transparent,
+                  borderRadius: AppRadius.xlBorder,
                 ),
 
                 child: Column(
                   children: [
                     Icon(Icons.restaurant,
-                        color: isSelected ? Colors.green : Colors.black54),
+                        color: isSelected ? ThemeService.accent : ThemeService.chipUnselectedText),
                     const SizedBox(height: 5),
                     Text(
                       "$meal Meals",
                       style: TextStyle(
-                        color: isSelected ? Colors.green : Colors.black54,
+                        color: isSelected ? ThemeService.accent : ThemeService.chipUnselectedText,
                       ),
                     ),
                   ],
@@ -399,11 +413,11 @@ class _WeightGainState extends State<WeightGain> {
   // 🔹 CALORIE CARD
   Widget buildCalorieCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
 
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(25),
+        color: ThemeService.cardColor,
+        borderRadius: AppRadius.xlBorder,
       ),
 
       child: Column(
@@ -417,9 +431,9 @@ class _WeightGainState extends State<WeightGain> {
 
           const SizedBox(height: 10),
 
-          const Text(
+          Text(
             "CALORIE SURPLUS",
-            style: TextStyle(color: Colors.black54),
+            style: TextStyle(color: ThemeService.textSecondary),
           ),
 
           const SizedBox(height: 10),
@@ -516,9 +530,9 @@ class _WeightGainState extends State<WeightGain> {
       child: ElevatedButton(
         onPressed: isGenerating ? null : _startPlan,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
+          backgroundColor: ThemeService.accent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: AppRadius.xxlBorder,
           ),
         ),
         child: isGenerating
@@ -528,7 +542,7 @@ class _WeightGainState extends State<WeightGain> {
               )
             : const Text(
                 "Gain Weight \u{1F680}",
-                style: TextStyle(fontSize: 18, color: Colors.black),
+                style: TextStyle(fontSize: 18, color: Colors.white),
               ),
       ),
     );

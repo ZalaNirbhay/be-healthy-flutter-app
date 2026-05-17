@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:be_healthy/pages/login.dart';
 import 'package:be_healthy/pages/profile_setup.dart';
 import 'package:be_healthy/pages/dashboard.dart';
+import 'package:be_healthy/services/theme_service.dart';
 
 /// AuthWrapper — Runs on app start, decides navigation automatically.
 ///
@@ -21,10 +22,10 @@ class AuthWrapper extends StatelessWidget {
       builder: (context, snapshot) {
         // Still loading auth state
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            backgroundColor: Color(0xFFDFF5EA),
+          return Scaffold(
+            backgroundColor: ThemeService.isDark ? const Color(0xFF0F172A) : const Color(0xFFDFF5EA),
             body: Center(
-              child: CircularProgressIndicator(color: Colors.green),
+              child: CircularProgressIndicator(color: ThemeService.accent),
             ),
           );
         }
@@ -43,10 +44,10 @@ class AuthWrapper extends StatelessWidget {
           builder: (context, docSnapshot) {
             // Loading Firestore data
             if (docSnapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(
-                backgroundColor: Color(0xFFDFF5EA),
+              return Scaffold(
+                backgroundColor: ThemeService.isDark ? const Color(0xFF0F172A) : const Color(0xFFDFF5EA),
                 body: Center(
-                  child: CircularProgressIndicator(color: Colors.green),
+                  child: CircularProgressIndicator(color: ThemeService.accent),
                 ),
               );
             }

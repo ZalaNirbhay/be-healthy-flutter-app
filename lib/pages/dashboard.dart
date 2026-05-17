@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'bmi_calculator.dart';
 import 'sidebar.dart';
 import 'food_tracker.dart';
@@ -8,6 +8,9 @@ import 'weight_gain.dart';
 import 'progress.dart';
 import 'profile_setting.dart';
 import '../widgets/custom_top_bar.dart';
+import '../widgets/bottom_nav.dart';
+import '../widgets/shimmer_loading.dart';
+import '../widgets/staggered_list.dart';
 import '../services/water_service.dart';
 import '../services/health_engine.dart';
 import '../services/food_service.dart';
@@ -15,6 +18,7 @@ import '../services/progress_service.dart';
 import '../services/notification_service.dart';
 import '../services/goal_service.dart';
 import '../services/theme_service.dart';
+import '../theme/app_theme.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -115,7 +119,6 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
-    // ThemeService accessed directly
     return Scaffold(
       drawer: const AppSidebar(),
       backgroundColor: Colors.transparent,
@@ -130,12 +133,12 @@ class _DashboardState extends State<Dashboard> {
         ),
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 buildTopBar(context, "BeHealth", isDashboard: true),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
 
                 Text(
                   "Welcome Back!",
@@ -145,49 +148,54 @@ class _DashboardState extends State<Dashboard> {
                     color: ThemeService.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
 
-                _buildHealthScoreCard(),
-                const SizedBox(height: 20),
-                _buildProgressCard(),
-                const SizedBox(height: 20),
+                if (isLoading) ...[
+                  const ShimmerCard(lineCount: 3),
+                  const SizedBox(height: AppSpacing.lg),
+                  const ShimmerCard(lineCount: 4),
+                ] else ...[
+                  _buildHealthScoreCard(),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildProgressCard(),
+                  const SizedBox(height: AppSpacing.lg),
 
-                if (!isLoading && feedback.isNotEmpty) ...[
-                  _buildInsightsSection(),
-                  const SizedBox(height: 20),
+                  if (feedback.isNotEmpty) ...[
+                    _buildInsightsSection(),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
+
+                  if (mealSuggestions.isNotEmpty) ...[
+                    _buildMealSuggestions(),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
+
+                  _buildToolsSection(context),
+                  const SizedBox(height: AppSpacing.xl),
+                  _buildQuickActions(),
                 ],
-
-                if (!isLoading && mealSuggestions.isNotEmpty) ...[
-                  _buildMealSuggestions(),
-                  const SizedBox(height: 20),
-                ],
-
-                buildToolsSection(context),
-                const SizedBox(height: 25),
-                _buildQuickActions(),
               ],
             ),
           ),
         ),
       ),
-      bottomNavigationBar: buildBottomNav(context),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 0),
     );
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════
   //  HEALTH SCORE + STATUS CARD
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════
 
   Widget _buildHealthScoreCard() {
     final statusLabel = status['label'] ?? 'Loading';
     final statusColor = _getStatusColor(status['color']);
-    // ThemeService accessed directly
 
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: ThemeService.surfaceColor,
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: AppRadius.xlBorder,
       ),
       child: Row(
         children: [
@@ -198,19 +206,14 @@ class _DashboardState extends State<Dashboard> {
                 width: 70,
                 height: 70,
                 child: CircularProgressIndicator(
-                  value: isLoading ? 0 : healthScore / 100,
+                  value: healthScore / 100,
                   strokeWidth: 6,
                   color: _getScoreColor(healthScore),
                   backgroundColor: ThemeService.cardColorLight,
                 ),
               ),
-              isLoading
-                  ? const SizedBox(
-                      width: 20, height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.green),
-                    )
-                  : Text("$healthScore",
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
+              Text("$healthScore",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
             ],
           ),
           const SizedBox(width: 18),
@@ -230,7 +233,7 @@ class _DashboardState extends State<Dashboard> {
                           color: Colors.orange.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Text("ðŸ”¥ $streak", style: const TextStyle(fontSize: 12)),
+                        child: Text("🔥 $streak", style: const TextStyle(fontSize: 12)),
                       ),
                     ],
                   ],
@@ -256,17 +259,16 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════
   //  PROGRESS CARD (BMI + Water)
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════
 
   Widget _buildProgressCard() {
-    // ThemeService accessed directly
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: ThemeService.surfaceColor,
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: AppRadius.xlBorder,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,16 +276,16 @@ class _DashboardState extends State<Dashboard> {
           Text("Daily Progress",
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: ThemeService.textPrimary)),
           Text("BMI and Hydration Tracking", style: TextStyle(color: ThemeService.textSecondary)),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.lg),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              buildCircle(bmi > 0 ? bmi.toStringAsFixed(1) : "--", "BMI", Colors.green),
+              _buildCircle(bmi > 0 ? bmi.toStringAsFixed(1) : "--", "BMI", Colors.green),
               Container(height: 80, width: 1, color: ThemeService.dividerColor),
-              buildCircle(WaterService.formatWater(waterMl), "WATER", Colors.blue),
+              _buildCircle(WaterService.formatWater(waterMl), "WATER", Colors.blue),
             ],
           ),
-          if (!isLoading && consumed > 0) ...[
+          if (consumed > 0) ...[
             const SizedBox(height: 15),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -299,6 +301,26 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
+  Widget _buildCircle(String value, String label, Color color) {
+    return Column(
+      children: [
+        Container(
+          width: 90, height: 90,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: color, width: 6),
+          ),
+          child: Center(
+            child: Text(value,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(label, style: TextStyle(color: ThemeService.textSecondary)),
+      ],
+    );
+  }
+
   Widget _buildMacroChip(String label, String value, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -311,12 +333,11 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════
   //  SMART INSIGHTS SECTION
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════
 
   Widget _buildInsightsSection() {
-    // ThemeService accessed directly
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -336,7 +357,7 @@ class _DashboardState extends State<Dashboard> {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: AppRadius.lgBorder,
               border: Border.all(color: color.withOpacity(0.3)),
             ),
             child: Row(
@@ -353,12 +374,11 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════
   //  SMART MEAL SUGGESTIONS
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════
 
   Widget _buildMealSuggestions() {
-    // ThemeService accessed directly
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -376,7 +396,7 @@ class _DashboardState extends State<Dashboard> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: ThemeService.cardColor,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: AppRadius.lgBorder,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -387,7 +407,7 @@ class _DashboardState extends State<Dashboard> {
                         overflow: TextOverflow.ellipsis),
                     const SizedBox(height: 4),
                     Text("${food['calories']} kcal",
-                        style: const TextStyle(color: Colors.green, fontSize: 12, fontWeight: FontWeight.w600)),
+                        style: TextStyle(color: ThemeService.accent, fontSize: 12, fontWeight: FontWeight.w600)),
                     Text("${food['serving']}g serving",
                         style: TextStyle(fontSize: 11, color: ThemeService.textSecondary)),
                   ],
@@ -400,12 +420,11 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════
   //  QUICK ACTIONS (Water + Food)
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════
 
   Widget _buildQuickActions() {
-    // ThemeService accessed directly
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -421,7 +440,7 @@ class _DashboardState extends State<Dashboard> {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     color: ThemeService.cardColor,
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: AppRadius.xxlBorder,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -448,7 +467,7 @@ class _DashboardState extends State<Dashboard> {
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
                     color: ThemeService.cardColor,
-                    borderRadius: BorderRadius.circular(30),
+                    borderRadius: AppRadius.xxlBorder,
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -467,9 +486,64 @@ class _DashboardState extends State<Dashboard> {
     );
   }
 
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════
+  //  TOOLS SECTION
+  // ═══════════════════════════════════════════════
+
+  Widget _buildToolsSection(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Tools",
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
+        const SizedBox(height: 15),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          children: [
+            _buildToolCard(context, Icons.calculate, "BMI", "Calculator", const BmiCalculator()),
+            _buildToolCard(context, Icons.restaurant, "Maintenance", "Calories", const MaintainCalories()),
+            _buildToolCard(context, Icons.fastfood, "Food", "Tracker", const FoodTracker()),
+            _buildToolCard(context, Icons.trending_down, "Weight Loss", "Planner", const WeightLoose()),
+            _buildToolCard(context, Icons.trending_up, "Weight Gain", "Planner", const WeightGain()),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildToolCard(BuildContext context, IconData icon, String title, String subtitle, Widget page) {
+    return InkWell(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => page)),
+      borderRadius: AppRadius.lgBorder,
+      child: Container(
+        padding: const EdgeInsets.all(15),
+        decoration: BoxDecoration(
+          color: ThemeService.cardColorLight,
+          borderRadius: AppRadius.lgBorder,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              backgroundColor: ThemeService.isDark ? const Color(0xFF2D4A6E) : Colors.white,
+              child: Icon(icon, color: ThemeService.accent),
+            ),
+            const Spacer(),
+            Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
+            Text(subtitle, style: TextStyle(color: ThemeService.textSecondary)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ═══════════════════════════════════════════════
   //  HELPERS
-  // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+  // ═══════════════════════════════════════════════
 
   Color _getStatusColor(String? colorName) {
     switch (colorName) {
@@ -498,119 +572,4 @@ class _DashboardState extends State<Dashboard> {
       default: return Icons.lightbulb_outline;
     }
   }
-}
-
-//////////////////// CIRCLES ////////////////////
-
-Widget buildCircle(String value, String label, Color color) {
-  // ThemeService accessed directly
-  return Column(
-    children: [
-      Container(
-        width: 90, height: 90,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: color, width: 6),
-        ),
-        child: Center(
-          child: Text(value,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
-        ),
-      ),
-      const SizedBox(height: 5),
-      Text(label, style: TextStyle(color: ThemeService.textSecondary)),
-    ],
-  );
-}
-
-//////////////////// TOOLS ////////////////////
-
-Widget buildToolsSection(BuildContext context) {
-  // ThemeService accessed directly
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text("Tools",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
-      const SizedBox(height: 15),
-      GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        children: [
-          InkWell(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BmiCalculator())),
-            child: buildToolCard(Icons.calculate, "BMI", "Calculator"),
-          ),
-          InkWell(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MaintainCalories())),
-            child: buildToolCard(Icons.restaurant, "Maintenance", "Calories"),
-          ),
-          InkWell(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FoodTracker())),
-            child: buildToolCard(Icons.fastfood, "Food", "Tracker"),
-          ),
-          InkWell(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WeightLoose())),
-            child: buildToolCard(Icons.trending_down, "Weight Loss", "Planner"),
-          ),
-          InkWell(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WeightGain())),
-            child: buildToolCard(Icons.trending_up, "Weight Gain", "Planner"),
-          ),
-        ],
-      ),
-    ],
-  );
-}
-
-Widget buildToolCard(IconData icon, String title, String subtitle) {
-  // ThemeService accessed directly
-  return Container(
-    padding: const EdgeInsets.all(15),
-    decoration: BoxDecoration(
-      color: ThemeService.cardColorLight,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CircleAvatar(
-          backgroundColor: ThemeService.isDark ? const Color(0xFF2D4A6E) : Colors.white,
-          child: Icon(icon, color: Colors.green),
-        ),
-        const Spacer(),
-        Text(title, style: TextStyle(fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
-        Text(subtitle, style: TextStyle(color: ThemeService.textSecondary)),
-      ],
-    ),
-  );
-}
-
-//////////////////// BOTTOM NAV ////////////////////
-
-Widget buildBottomNav(BuildContext context) {
-  return BottomNavigationBar(
-    currentIndex: 0,
-    type: BottomNavigationBarType.fixed,
-    selectedItemColor: Colors.green,
-    unselectedItemColor: Colors.grey,
-    backgroundColor: ThemeService.isDark ? const Color(0xFF1A1A2E) : Colors.white,
-    onTap: (index) {
-      if (index == 0) return;
-      if (index == 1) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const BmiCalculator()));
-      if (index == 2) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const FoodTracker()));
-      if (index == 3) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const progress()));
-      if (index == 4) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProfileSetting()));
-    },
-    items: const [
-      BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-      BottomNavigationBarItem(icon: Icon(Icons.monitor_weight), label: "BMI"),
-      BottomNavigationBarItem(icon: Icon(Icons.local_fire_department), label: "Calories"),
-      BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: "Progress"),
-      BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-    ],
-  );
 }

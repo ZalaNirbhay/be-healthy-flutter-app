@@ -13,6 +13,20 @@ class ThemeService {
   static bool get isDark => themeMode.value == ThemeMode.dark;
 
   // ═══════════════════════════════════════════════
+  //  PREMIUM COLOR PALETTE
+  // ═══════════════════════════════════════════════
+
+  // Dark mode base colors
+  static const Color _darkBg = Color(0xFF0F172A);
+  static const Color _darkSurface = Color(0xFF1E293B);
+  static const Color _darkCard = Color(0xFF253548);
+  static const Color _darkCardLight = Color(0xFF1E293B);
+
+  // Light mode base colors
+  static const Color _lightBg = Color(0xFFF8FAF9);
+  static const Color _lightCard = Colors.white;
+
+  // ═══════════════════════════════════════════════
   //  THEME DATA
   // ═══════════════════════════════════════════════
 
@@ -20,14 +34,50 @@ class ThemeService {
         brightness: Brightness.light,
         primarySwatch: Colors.green,
         scaffoldBackgroundColor: Colors.transparent,
+        colorScheme: ColorScheme.light(
+          primary: const Color(0xFF4CAF50),
+          secondary: const Color(0xFF6FCF97),
+          surface: _lightBg,
+        ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
           backgroundColor: Colors.white,
-          selectedItemColor: Colors.green,
+          selectedItemColor: Color(0xFF4CAF50),
           unselectedItemColor: Colors.grey,
+          elevation: 8,
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,
+        ),
+        cardTheme: CardThemeData(
+          color: _lightCard,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25),
+          ),
+        ),
+        dialogTheme: DialogThemeData(
+          backgroundColor: _lightCard,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: const Color(0xFF323232),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: const Color(0xFFF5F5F5),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       );
 
@@ -35,14 +85,51 @@ class ThemeService {
         brightness: Brightness.dark,
         primarySwatch: Colors.green,
         scaffoldBackgroundColor: Colors.transparent,
+        colorScheme: ColorScheme.dark(
+          primary: const Color(0xFF6FCF97),
+          secondary: const Color(0xFF6FCF97),
+          surface: _darkBg,
+        ),
         bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-          backgroundColor: Color(0xFF1A1A2E),
+          backgroundColor: _darkBg,
           selectedItemColor: Color(0xFF6FCF97),
           unselectedItemColor: Colors.grey,
+          elevation: 8,
         ),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,
+        ),
+        cardTheme: CardThemeData(
+          color: _darkCard,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(25),
+          ),
+        ),
+        dialogTheme: DialogThemeData(
+          backgroundColor: _darkSurface,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        snackBarTheme: SnackBarThemeData(
+          backgroundColor: _darkCard,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: _darkCard,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(25),
+            borderSide: BorderSide.none,
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          hintStyle: TextStyle(color: Colors.white.withOpacity(0.4)),
         ),
       );
 
@@ -52,45 +139,74 @@ class ThemeService {
 
   /// Primary gradient for Dashboard
   static List<Color> get dashboardGradient => isDark
-      ? const [Color(0xFF1A1A2E), Color(0xFF16213E)]
+      ? const [Color(0xFF0F172A), Color(0xFF162036)]
       : const [Color(0xFF6FCF97), Color(0xFFDFF5EA)];
 
   /// Secondary gradient for inner pages
   static List<Color> get pageGradient => isDark
-      ? const [Color(0xFF1A1A2E), Color(0xFF0F3460)]
+      ? const [Color(0xFF0F172A), Color(0xFF162036)]
       : const [Color(0xFFDFF5EA), Color(0xFFB7E4C7)];
 
   /// Sidebar gradient
   static List<Color> get sidebarGradient => isDark
-      ? const [Color(0xFF16213E), Color(0xFF1A1A2E)]
+      ? const [Color(0xFF162036), Color(0xFF0F172A)]
       : const [Color(0xFF6FCF97), Color(0xFFB7E4C7)];
+
+  /// Login/Register gradient
+  static List<Color> get authGradient => isDark
+      ? const [Color(0xFF0F172A), Color(0xFF162036)]
+      : const [Color(0xFFDFF5EA), Color(0xFFF5F5F5)];
 
   // ═══════════════════════════════════════════════
   //  COMPONENT COLORS
   // ═══════════════════════════════════════════════
 
   static Color get cardColor =>
-      isDark ? const Color(0xFF1E2D4A).withOpacity(0.7) : Colors.white.withOpacity(0.7);
+      isDark ? _darkCard.withOpacity(0.85) : Colors.white.withOpacity(0.75);
 
   static Color get cardColorLight =>
-      isDark ? const Color(0xFF1E2D4A).withOpacity(0.5) : Colors.white.withOpacity(0.5);
+      isDark ? _darkCardLight.withOpacity(0.6) : Colors.white.withOpacity(0.5);
 
   static Color get cardColorStrong =>
-      isDark ? const Color(0xFF1E2D4A).withOpacity(0.9) : Colors.white.withOpacity(0.8);
+      isDark ? _darkCard.withOpacity(0.95) : Colors.white.withOpacity(0.9);
 
   static Color get surfaceColor =>
-      isDark ? const Color(0xFF1E2D4A).withOpacity(0.3) : Colors.white.withOpacity(0.3);
+      isDark ? _darkSurface.withOpacity(0.5) : Colors.white.withOpacity(0.35);
 
   static Color get textPrimary =>
-      isDark ? Colors.white : Colors.black;
+      isDark ? const Color(0xFFF1F5F9) : const Color(0xFF1E293B);
 
   static Color get textSecondary =>
-      isDark ? Colors.white70 : Colors.black54;
+      isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
   static Color get accent => const Color(0xFF6FCF97);
 
   static Color get dividerColor =>
-      isDark ? Colors.white24 : Colors.grey.shade300;
+      isDark ? Colors.white.withOpacity(0.12) : Colors.grey.shade300;
+
+  /// Bottom sheet background
+  static Color get bottomSheetColor =>
+      isDark ? const Color(0xFF1E293B) : const Color(0xFFF5FFF8);
+
+  /// Input field fill color
+  static Color get inputFillColor =>
+      isDark ? _darkCard : const Color(0xFFF5F5F5);
+
+  /// Selected chip/pill color for light themes
+  static Color get chipSelectedColor =>
+      isDark ? _darkCard : Colors.white;
+
+  /// Unselected chip text color
+  static Color get chipUnselectedText =>
+      isDark ? const Color(0xFF94A3B8) : Colors.black54;
+
+  /// Dialog/card solid background (no opacity)
+  static Color get solidCardColor =>
+      isDark ? _darkCard : Colors.white;
+
+  /// Tab/selector background
+  static Color get selectorBackground =>
+      isDark ? _darkSurface.withOpacity(0.6) : Colors.white.withOpacity(0.5);
 
   // ═══════════════════════════════════════════════
   //  PERSISTENCE

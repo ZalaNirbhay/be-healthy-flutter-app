@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/custom_top_bar.dart';
 import '../services/calorie_service.dart';
 import '../services/theme_service.dart';
+import '../theme/app_theme.dart';
 
 class MaintainCalories extends StatefulWidget {
   const MaintainCalories({super.key});
@@ -13,6 +14,16 @@ class MaintainCalories extends StatefulWidget {
 class _MaintainCaloriesState extends State<MaintainCalories> {
   String activityLevel = "Moderately Active (3-5 days/week)";
   int currentIndex = 1;
+
+  @override
+  void dispose() {
+    ThemeService.themeMode.removeListener(_onThemeChange);
+    super.dispose();
+  }
+
+  void _onThemeChange() {
+    if (mounted) setState(() {});
+  }
 
   double minCal = 1800;
   double maxCal = 2600;
@@ -38,6 +49,7 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
   void initState() {
     super.initState();
     _calculateCalories();
+    ThemeService.themeMode.addListener(_onThemeChange);
   }
 
   // 🔥 Fetch user data and calculate TDEE
@@ -114,11 +126,11 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
 
                 const SizedBox(height: 25),
 
-                const Text(
+                Text(
                   "ACTIVITY LEVEL",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: Colors.black54,
+                    color: ThemeService.textSecondary,
                   ),
                 ),
 
@@ -154,13 +166,16 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(25),
+        color: ThemeService.cardColor,
+        borderRadius: AppRadius.xlBorder,
       ),
       child: DropdownButton<String>(
         value: activityLevel,
         isExpanded: true,
         underline: const SizedBox(),
+        dropdownColor: ThemeService.solidCardColor,
+        style: TextStyle(color: ThemeService.textPrimary, fontSize: 14),
+        iconEnabledColor: ThemeService.textSecondary,
         items: activityOptions.map((item) {
           return DropdownMenuItem(
             value: item,
@@ -183,8 +198,8 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
     return Container(
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(30),
+        color: ThemeService.cardColor,
+        borderRadius: AppRadius.xxlBorder,
       ),
       child: Column(
         children: [
@@ -205,21 +220,21 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
             // 🔥 Dynamic TDEE value
             Text(
               _formatNumber(tdee),
-              style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: ThemeService.textPrimary),
             ),
             const SizedBox(height: 5),
-            const Text("kcal / day"),
+            Text("kcal / day", style: TextStyle(color: ThemeService.textSecondary)),
           ],
           const SizedBox(height: 15),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(20),
+              color: ThemeService.accent.withOpacity(0.2),
+              borderRadius: AppRadius.lgBorder,
             ),
-            child: const Text(
+            child: Text(
               "Daily Maintenance Goal",
-              style: TextStyle(color: Colors.green),
+              style: TextStyle(color: ThemeService.accent),
             ),
           )
         ],
@@ -232,14 +247,14 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(25),
+        color: ThemeService.cardColor,
+        borderRadius: AppRadius.xlBorder,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("CALORIE RANGE",
-              style: TextStyle(color: Colors.black54)),
+          Text("CALORIE RANGE",
+              style: TextStyle(color: ThemeService.textSecondary)),
           const SizedBox(height: 20),
           RangeSlider(
             values: RangeValues(
@@ -248,7 +263,8 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
             ),
             min: 1000,
             max: 4000,
-            activeColor: Colors.green,
+            activeColor: ThemeService.accent,
+            inactiveColor: ThemeService.dividerColor,
             onChanged: (values) {
               setState(() {
                 minCal = values.start;
@@ -259,16 +275,16 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("${minCal.toInt()}"),
-              Text("${maxCal.toInt()}"),
+              Text("${minCal.toInt()}", style: TextStyle(color: ThemeService.textPrimary)),
+              Text("${maxCal.toInt()}", style: TextStyle(color: ThemeService.textPrimary)),
             ],
           ),
           const SizedBox(height: 10),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Deficit"),
-              Text("Surplus"),
+              Text("Deficit", style: TextStyle(color: ThemeService.textSecondary)),
+              Text("Surplus", style: TextStyle(color: ThemeService.textSecondary)),
             ],
           )
         ],
@@ -281,19 +297,20 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(25),
+        color: ThemeService.cardColor,
+        borderRadius: AppRadius.xlBorder,
       ),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: Colors.green.withOpacity(0.2),
-            child: const Icon(Icons.info, color: Colors.green),
+            backgroundColor: ThemeService.accent.withOpacity(0.2),
+            child: Icon(Icons.info, color: ThemeService.accent),
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Text(
               "Maintenance calories are the number of calories your body needs to maintain your current weight based on your activity level.",
+              style: TextStyle(color: ThemeService.textSecondary),
             ),
           )
         ],
@@ -309,9 +326,9 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
       child: ElevatedButton(
         onPressed: isRecalculating ? null : _recalculate,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
+          backgroundColor: ThemeService.accent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: AppRadius.xxlBorder,
           ),
         ),
         child: isRecalculating
@@ -325,7 +342,7 @@ class _MaintainCaloriesState extends State<MaintainCalories> {
               )
             : const Text(
                 "Recalculate",
-                style: TextStyle(fontSize: 18, color: Colors.black),
+                style: TextStyle(fontSize: 18, color: Colors.white),
               ),
       ),
     );

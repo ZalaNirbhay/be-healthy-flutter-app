@@ -4,9 +4,13 @@ import 'bmi_calculator.dart';
 import 'progress.dart';
 import 'profile_setting.dart';
 import '../widgets/custom_top_bar.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/bottom_nav.dart';
+import '../widgets/shimmer_loading.dart';
 import '../services/food_service.dart';
 import '../services/calorie_service.dart';
 import '../services/theme_service.dart';
+import '../theme/app_theme.dart';
 
 class FoodTracker extends StatefulWidget {
   const FoodTracker({super.key});
@@ -15,7 +19,8 @@ class FoodTracker extends StatefulWidget {
   State<FoodTracker> createState() => _FoodTrackerState();
 }
 
-class _FoodTrackerState extends State<FoodTracker> {
+class _FoodTrackerState extends State<FoodTracker>
+    with SingleTickerProviderStateMixin {
   // 🔥 Dynamic data from Firestore
   int consumed = 0;
   int goal = 2000;
@@ -32,6 +37,17 @@ class _FoodTrackerState extends State<FoodTracker> {
   void initState() {
     super.initState();
     _initData();
+    ThemeService.themeMode.addListener(_onThemeChange);
+  }
+
+  @override
+  void dispose() {
+    ThemeService.themeMode.removeListener(_onThemeChange);
+    super.dispose();
+  }
+
+  void _onThemeChange() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _initData() async {
@@ -72,9 +88,9 @@ class _FoodTrackerState extends State<FoodTracker> {
       backgroundColor: Colors.transparent,
 
       floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.green,
+        backgroundColor: ThemeService.accent,
         onPressed: _showAddFoodSheet,
-        child: const Icon(Icons.add),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
 
       body: Container(
@@ -88,7 +104,7 @@ class _FoodTrackerState extends State<FoodTracker> {
 
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppSpacing.lg),
 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,15 +112,15 @@ class _FoodTrackerState extends State<FoodTracker> {
 
                 buildTopBar(context, "Food Tracker"),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
 
                 buildGoalCard(progress),
 
-                const SizedBox(height: 25),
+                const SizedBox(height: AppSpacing.xl),
 
                 buildFoodLog(),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
 
                 buildTotalCard(),
               ],
@@ -113,28 +129,28 @@ class _FoodTrackerState extends State<FoodTracker> {
         ),
       ),
 
-      bottomNavigationBar: buildBottomNav(context),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 2),
     );
   }
 
   // 🔹 GOAL CARD — Dynamic data
   Widget buildGoalCard(double progress) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(25),
+        color: ThemeService.cardColor,
+        borderRadius: AppRadius.xlBorder,
       ),
 
       child: Column(
         children: [
 
-          const Text(
+          Text(
             "Daily Goal",
-            style: TextStyle(fontSize: 18),
+            style: TextStyle(fontSize: 18, color: ThemeService.textPrimary),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.lg),
 
           Stack(
             alignment: Alignment.center,
@@ -146,17 +162,17 @@ class _FoodTrackerState extends State<FoodTracker> {
                 child: CircularProgressIndicator(
                   value: isLoading ? 0 : progress,
                   strokeWidth: 12,
-                  color: Colors.green,
-                  backgroundColor: Colors.grey.shade300,
+                  color: ThemeService.accent,
+                  backgroundColor: ThemeService.dividerColor,
                 ),
               ),
 
               isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 24,
                       height: 24,
                       child: CircularProgressIndicator(
-                        color: Colors.green,
+                        color: ThemeService.accent,
                         strokeWidth: 2,
                       ),
                     )
@@ -164,28 +180,48 @@ class _FoodTrackerState extends State<FoodTracker> {
                       children: [
                         Text(
                           "$consumed",
-                          style: const TextStyle(
-                              fontSize: 28, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: ThemeService.textPrimary),
                         ),
-                        Text("/ $goal KCAL"),
+                        Text("/ $goal KCAL",
+                            style: TextStyle(color: ThemeService.textSecondary)),
                       ],
                     )
             ],
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.lg),
 
           // 🔥 Dynamic macros
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Text("Carbs\n${totalCarbs}g", textAlign: TextAlign.center),
-              Text("Protein\n${totalProtein}g", textAlign: TextAlign.center),
-              Text("Fat\n${totalFat}g", textAlign: TextAlign.center),
+              _buildMacroColumn("Carbs", "${totalCarbs}g", Colors.orange),
+              _buildMacroColumn("Protein", "${totalProtein}g", Colors.blue),
+              _buildMacroColumn("Fat", "${totalFat}g", Colors.purple),
             ],
           )
         ],
       ),
+    );
+  }
+
+  Widget _buildMacroColumn(String label, String value, Color color) {
+    return Column(
+      children: [
+        Text(label, style: TextStyle(fontSize: 12, color: ThemeService.textSecondary)),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: color,
+            fontSize: 15,
+          ),
+        ),
+      ],
     );
   }
 
@@ -197,109 +233,119 @@ class _FoodTrackerState extends State<FoodTracker> {
 
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
+          children: [
             Text(
               "Food Log",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: ThemeService.textPrimary),
             ),
-            Text("See All", style: TextStyle(color: Colors.green)),
+            Text("See All",
+                style: TextStyle(color: ThemeService.accent)),
           ],
         ),
 
-        const SizedBox(height: 15),
+        const SizedBox(height: AppSpacing.base),
 
-        if (isLoading)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(20),
-              child: CircularProgressIndicator(color: Colors.green),
-            ),
-          )
-        else if (foodLog.isEmpty)
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.7),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Center(
-              child: Text(
-                "No food logged today.\nTap + to add food!",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.black54),
-              ),
-            ),
-          )
-        else
-          Column(
-            children: foodLog.map((item) {
-              return Dismissible(
-                key: Key(item['id'] ?? item.hashCode.toString()),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerRight,
-                  padding: const EdgeInsets.only(right: 20),
-                  margin: const EdgeInsets.only(bottom: 10),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade400,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(Icons.delete, color: Colors.white),
-                ),
-                onDismissed: (_) => _deleteEntry(item),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.all(15),
+        // Animated content switching
+        AnimatedSwitcher(
+          duration: AppDurations.normal,
+          child: isLoading
+              ? const ShimmerList(count: 3, key: ValueKey('shimmer'))
+              : foodLog.isEmpty
+                  ? EmptyStateWidget(
+                      key: const ValueKey('empty'),
+                      icon: Icons.restaurant_menu,
+                      title: "No meals added yet",
+                      subtitle:
+                          "Start tracking your nutrition\nby adding your first meal",
+                      buttonLabel: "Add First Meal",
+                      onButtonPressed: _showAddFoodSheet,
+                    )
+                  : Column(
+                      key: const ValueKey('list'),
+                      children: foodLog.map((item) {
+                        return Dismissible(
+                          key: Key(item['id'] ?? item.hashCode.toString()),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            margin: const EdgeInsets.only(bottom: 10),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade400,
+                              borderRadius: AppRadius.lgBorder,
+                            ),
+                            child: const Icon(Icons.delete,
+                                color: Colors.white),
+                          ),
+                          onDismissed: (_) => _deleteEntry(item),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            padding: const EdgeInsets.all(15),
 
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.7),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
+                            decoration: BoxDecoration(
+                              color: ThemeService.cardColor,
+                              borderRadius: AppRadius.lgBorder,
+                            ),
 
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
+                            child: Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
 
-                      Row(
-                        children: [
+                                Row(
+                                  children: [
 
-                          CircleAvatar(
-                            backgroundColor: Colors.green.shade200,
-                            child: Icon(
-                              FoodService.getMealIcon(item['meal_type'] ?? 'Snack'),
-                              color: Colors.green,
+                                    CircleAvatar(
+                                      backgroundColor:
+                                          ThemeService.accent.withOpacity(0.2),
+                                      child: Icon(
+                                        FoodService.getMealIcon(
+                                            item['meal_type'] ?? 'Snack'),
+                                        color: ThemeService.accent,
+                                      ),
+                                    ),
+
+                                    const SizedBox(width: 10),
+
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          item["meal_type"] ?? "Food",
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: ThemeService.textPrimary),
+                                        ),
+                                        SizedBox(
+                                          width: 150,
+                                          child: Text(
+                                            item["food_name"] ?? "",
+                                            overflow: TextOverflow.ellipsis,
+                                            style: TextStyle(
+                                                color: ThemeService
+                                                    .textSecondary),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+
+                                Text("${item["calories"] ?? 0} kcal",
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: ThemeService.textPrimary)),
+                              ],
                             ),
                           ),
-
-                          const SizedBox(width: 10),
-
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item["meal_type"] ?? "Food",
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              SizedBox(
-                                width: 150,
-                                child: Text(
-                                  item["food_name"] ?? "",
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      Text("${item["calories"] ?? 0} kcal"),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-          )
+                        );
+                      }).toList(),
+                    ),
+        ),
       ],
     );
   }
@@ -307,20 +353,22 @@ class _FoodTrackerState extends State<FoodTracker> {
   // 🔹 TOTAL CARD — Dynamic
   Widget buildTotalCard() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
 
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(25),
+        color: ThemeService.cardColor,
+        borderRadius: AppRadius.xlBorder,
       ),
 
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text("Total Consumed"),
+          Text("Total Consumed",
+              style: TextStyle(color: ThemeService.textSecondary)),
           Text(
             "$consumed kcal",
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: ThemeService.textPrimary),
           ),
         ],
       ),
@@ -351,32 +399,6 @@ class _FoodTrackerState extends State<FoodTracker> {
     if (success) {
       await _loadTodayEntries();
     }
-  }
-
-  // 🔹 BOTTOM NAV
-  Widget buildBottomNav(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: 2,
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: Colors.green,
-      unselectedItemColor: Colors.grey,
-
-      onTap: (index) {
-        if (index == 2) return;
-        if (index == 0) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Dashboard()));
-        if (index == 1) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const BmiCalculator()));
-        if (index == 3) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const progress()));
-        if (index == 4) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProfileSetting()));
-      },
-
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-        BottomNavigationBarItem(icon: Icon(Icons.monitor_weight), label: "BMI"),
-        BottomNavigationBarItem(icon: Icon(Icons.local_fire_department), label: "Calories"),
-        BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: "Progress"),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-      ],
-    );
   }
 }
 
@@ -525,9 +547,9 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Color(0xFFF5FFF8),
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      decoration: BoxDecoration(
+        color: ThemeService.bottomSheetColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(25)),
       ),
       child: Column(
         children: [
@@ -537,7 +559,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey.shade400,
+              color: ThemeService.dividerColor,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -548,9 +570,12 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   "Add Food",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: ThemeService.textPrimary),
                 ),
                 Row(
                   children: [
@@ -563,11 +588,12 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                       },
                       child: Text(
                         isCustomMode ? "Search Food" : "Custom Entry",
-                        style: const TextStyle(color: Colors.green),
+                        style: TextStyle(color: ThemeService.accent),
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close),
+                      icon: Icon(Icons.close,
+                          color: ThemeService.textSecondary),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ],
@@ -582,8 +608,8 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
+                color: ThemeService.selectorBackground,
+                borderRadius: AppRadius.xlBorder,
               ),
               child: Row(
                 children: mealTypes.map((meal) {
@@ -591,11 +617,12 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                   return Expanded(
                     child: GestureDetector(
                       onTap: () => setState(() => selectedMeal = meal),
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: AppDurations.fast,
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? Colors.green
+                              ? ThemeService.accent
                               : Colors.transparent,
                           borderRadius: BorderRadius.circular(22),
                         ),
@@ -606,7 +633,7 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                               fontSize: 13,
                               color: isSelected
                                   ? Colors.white
-                                  : Colors.black54,
+                                  : ThemeService.chipUnselectedText,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -637,9 +664,9 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
               child: ElevatedButton(
                 onPressed: isSaving ? null : _addSelectedFood,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
+                  backgroundColor: ThemeService.accent,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(25),
+                    borderRadius: AppRadius.xlBorder,
                   ),
                 ),
                 child: isSaving
@@ -675,13 +702,15 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
         children: [
           TextField(
             controller: _customNameController,
+            style: TextStyle(color: ThemeService.textPrimary),
             decoration: InputDecoration(
               hintText: "Food name",
-              prefixIcon: const Icon(Icons.fastfood),
+              hintStyle: TextStyle(color: ThemeService.textSecondary),
+              prefixIcon: Icon(Icons.fastfood, color: ThemeService.textSecondary),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: ThemeService.inputFillColor,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
+                borderRadius: AppRadius.xlBorder,
                 borderSide: BorderSide.none,
               ),
             ),
@@ -690,13 +719,16 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
           TextField(
             controller: _customCalController,
             keyboardType: TextInputType.number,
+            style: TextStyle(color: ThemeService.textPrimary),
             decoration: InputDecoration(
               hintText: "Calories (kcal)",
-              prefixIcon: const Icon(Icons.local_fire_department),
+              hintStyle: TextStyle(color: ThemeService.textSecondary),
+              prefixIcon: Icon(Icons.local_fire_department,
+                  color: ThemeService.textSecondary),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: ThemeService.inputFillColor,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
+                borderRadius: AppRadius.xlBorder,
                 borderSide: BorderSide.none,
               ),
             ),
@@ -716,13 +748,15 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
           child: TextField(
             controller: _searchController,
             onChanged: _search,
+            style: TextStyle(color: ThemeService.textPrimary),
             decoration: InputDecoration(
               hintText: "Search food...",
-              prefixIcon: const Icon(Icons.search),
+              hintStyle: TextStyle(color: ThemeService.textSecondary),
+              prefixIcon: Icon(Icons.search, color: ThemeService.textSecondary),
               filled: true,
-              fillColor: Colors.white,
+              fillColor: ThemeService.inputFillColor,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(25),
+                borderRadius: AppRadius.xlBorder,
                 borderSide: BorderSide.none,
               ),
             ),
@@ -738,18 +772,21 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.shade50,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.green, width: 1),
+                color: ThemeService.isDark
+                    ? ThemeService.accent.withOpacity(0.1)
+                    : Colors.green.shade50,
+                borderRadius: AppRadius.mdBorder,
+                border: Border.all(color: ThemeService.accent, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     selectedFood!['name'],
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
+                      color: ThemeService.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -759,13 +796,17 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                         child: TextField(
                           controller: _quantityController,
                           keyboardType: TextInputType.number,
+                          style: TextStyle(color: ThemeService.textPrimary),
                           decoration: InputDecoration(
-                            hintText: "${selectedFood!['default_serving_g'] ?? 100}",
+                            hintText:
+                                "${selectedFood!['default_serving_g'] ?? 100}",
                             labelText: "Quantity (grams)",
+                            labelStyle:
+                                TextStyle(color: ThemeService.textSecondary),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: ThemeService.inputFillColor,
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(15),
+                              borderRadius: AppRadius.mdBorder,
                               borderSide: BorderSide.none,
                             ),
                             contentPadding: const EdgeInsets.symmetric(
@@ -778,17 +819,17 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                         children: [
                           Text(
                             "${_getPreviewCalories()} kcal",
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
-                              color: Colors.green,
+                              color: ThemeService.accent,
                             ),
                           ),
                           Text(
                             "${selectedFood!['calories_per_100g']} per 100g",
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: Colors.black54,
+                              color: ThemeService.textSecondary,
                             ),
                           ),
                         ],
@@ -803,15 +844,17 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
         // Food list
         Expanded(
           child: isSearching
-              ? const Center(
-                  child: CircularProgressIndicator(color: Colors.green),
+              ? Center(
+                  child: CircularProgressIndicator(
+                      color: ThemeService.accent),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: searchResults.length,
                   itemBuilder: (context, index) {
                     final food = searchResults[index];
-                    final isSelected = selectedFood?['id'] == food['id'];
+                    final isSelected =
+                        selectedFood?['id'] == food['id'];
 
                     return GestureDetector(
                       onTap: () {
@@ -821,52 +864,58 @@ class _AddFoodSheetState extends State<_AddFoodSheet> {
                               '${food['default_serving_g'] ?? 100}';
                         });
                       },
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: AppDurations.fast,
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? Colors.green.shade50
-                              : Colors.white,
-                          borderRadius: BorderRadius.circular(15),
+                              ? ThemeService.accent.withOpacity(
+                                  ThemeService.isDark ? 0.15 : 0.08)
+                              : ThemeService.solidCardColor,
+                          borderRadius: AppRadius.mdBorder,
                           border: isSelected
-                              ? Border.all(color: Colors.green, width: 1.5)
+                              ? Border.all(
+                                  color: ThemeService.accent, width: 1.5)
                               : null,
                         ),
                         child: Row(
                           children: [
                             CircleAvatar(
-                              backgroundColor: Colors.green.shade100,
+                              backgroundColor:
+                                  ThemeService.accent.withOpacity(0.15),
                               child: Icon(
                                 FoodService.getIconFromName(food['icon']),
-                                color: Colors.green,
+                                color: ThemeService.accent,
                                 size: 20,
                               ),
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment:
+                                    CrossAxisAlignment.start,
                                 children: [
                                   Text(
                                     food['name'],
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontWeight: FontWeight.w600,
+                                      color: ThemeService.textPrimary,
                                     ),
                                   ),
                                   Text(
                                     "${food['calories_per_100g']} kcal/100g  •  ${food['category']}",
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.black54,
+                                      color: ThemeService.textSecondary,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                             if (isSelected)
-                              const Icon(Icons.check_circle,
-                                  color: Colors.green),
+                              Icon(Icons.check_circle,
+                                  color: ThemeService.accent),
                           ],
                         ),
                       ),

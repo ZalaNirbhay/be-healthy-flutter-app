@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'dashboard.dart';
-import 'food_tracker.dart';
-import 'progress.dart';
-import 'profile_setting.dart';
 import '../widgets/custom_top_bar.dart';
+import '../widgets/bottom_nav.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
+import '../theme/app_theme.dart';
 
 class BmiCalculator extends StatefulWidget {
   const BmiCalculator({super.key});
@@ -26,6 +24,17 @@ class _BmiCalculatorState extends State<BmiCalculator> {
   void initState() {
     super.initState();
     _loadProfileData();
+    ThemeService.themeMode.addListener(_onThemeChange);
+  }
+
+  @override
+  void dispose() {
+    ThemeService.themeMode.removeListener(_onThemeChange);
+    super.dispose();
+  }
+
+  void _onThemeChange() {
+    if (mounted) setState(() {});
   }
 
   // 🔥 Prefill from user profile
@@ -58,32 +67,32 @@ class _BmiCalculatorState extends State<BmiCalculator> {
 
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppSpacing.lg),
 
             child: Column(
               children: [
                 buildTopBar(context, "BMI Calculator"),
-                const SizedBox(height: 30),
+                const SizedBox(height: AppSpacing.xxl),
 
                 buildGauge(),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
 
                 buildLabels(),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: AppSpacing.xxl),
 
                 buildInputCard("Height", height, "cm", Icons.straighten),
 
-                const SizedBox(height: 15),
+                const SizedBox(height: AppSpacing.base),
 
                 buildInputCard("Weight", weight, "kg", Icons.monitor_weight),
 
-                const SizedBox(height: 30),
+                const SizedBox(height: AppSpacing.xxl),
 
                 buildButton(),
 
-                const SizedBox(height: 25),
+                const SizedBox(height: AppSpacing.xl),
 
                 buildHealthTip(),
               ],
@@ -91,11 +100,9 @@ class _BmiCalculatorState extends State<BmiCalculator> {
           ),
         ),
       ),
-      bottomNavigationBar: buildBottomNav(context),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 1),
     );
   }
-
-  // AppBar removed, moved to custom_top_bar.dart
 
   // 🔹 Gauge
   Widget buildGauge() {
@@ -111,7 +118,7 @@ class _BmiCalculatorState extends State<BmiCalculator> {
               topRight: Radius.circular(200),
             ),
             border: Border.all(
-              color: Colors.grey.shade300,
+              color: ThemeService.dividerColor,
               width: 14,
             ),
           ),
@@ -123,7 +130,7 @@ class _BmiCalculatorState extends State<BmiCalculator> {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 40),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.9),
+              color: ThemeService.cardColorStrong,
               borderRadius: BorderRadius.circular(40),
             ),
 
@@ -132,9 +139,10 @@ class _BmiCalculatorState extends State<BmiCalculator> {
 
                 Text(
                   bmi.toStringAsFixed(1),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 42,
                     fontWeight: FontWeight.bold,
+                    color: ThemeService.textPrimary,
                   ),
                 ),
 
@@ -157,12 +165,12 @@ class _BmiCalculatorState extends State<BmiCalculator> {
 
   // 🔹 Labels
   Widget buildLabels() {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        Text("Underweight"),
-        Text("Normal"),
-        Text("Overweight"),
+        Text("Underweight", style: TextStyle(color: ThemeService.textSecondary)),
+        Text("Normal", style: TextStyle(color: ThemeService.textSecondary)),
+        Text("Overweight", style: TextStyle(color: ThemeService.textSecondary)),
       ],
     );
   }
@@ -174,11 +182,11 @@ class _BmiCalculatorState extends State<BmiCalculator> {
       onTap: () => showEditDialog(title),
 
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(AppSpacing.lg),
 
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(30),
+          color: ThemeService.cardColor,
+          borderRadius: AppRadius.xxlBorder,
         ),
 
         child: Row(
@@ -190,8 +198,8 @@ class _BmiCalculatorState extends State<BmiCalculator> {
               children: [
 
                 CircleAvatar(
-                  backgroundColor: Colors.green.shade200,
-                  child: Icon(icon, color: Colors.green),
+                  backgroundColor: ThemeService.accent.withOpacity(0.2),
+                  child: Icon(icon, color: ThemeService.accent),
                 ),
 
                 const SizedBox(width: 15),
@@ -199,11 +207,13 @@ class _BmiCalculatorState extends State<BmiCalculator> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title),
+                    Text(title, style: TextStyle(color: ThemeService.textSecondary)),
                     Text(
                       value.toString(),
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 18),
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                          color: ThemeService.textPrimary),
                     ),
                   ],
                 ),
@@ -212,9 +222,9 @@ class _BmiCalculatorState extends State<BmiCalculator> {
 
             Row(
               children: [
-                Text(unit),
+                Text(unit, style: TextStyle(color: ThemeService.textSecondary)),
                 const SizedBox(width: 5),
-                const Icon(Icons.edit, size: 18),
+                Icon(Icons.edit, size: 18, color: ThemeService.textSecondary),
               ],
             ),
           ],
@@ -231,10 +241,21 @@ class _BmiCalculatorState extends State<BmiCalculator> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Enter $type"),
+          backgroundColor: ThemeService.solidCardColor,
+          title: Text("Enter $type",
+              style: TextStyle(color: ThemeService.textPrimary)),
           content: TextField(
             controller: controller,
             keyboardType: TextInputType.number,
+            style: TextStyle(color: ThemeService.textPrimary),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: ThemeService.inputFillColor,
+              border: OutlineInputBorder(
+                borderRadius: AppRadius.mdBorder,
+                borderSide: BorderSide.none,
+              ),
+            ),
           ),
           actions: [
             TextButton(
@@ -251,7 +272,7 @@ class _BmiCalculatorState extends State<BmiCalculator> {
 
                 Navigator.pop(context);
               },
-              child: const Text("Save"),
+              child: Text("Save", style: TextStyle(color: ThemeService.accent)),
             )
           ],
         );
@@ -269,15 +290,15 @@ class _BmiCalculatorState extends State<BmiCalculator> {
         onPressed: calculateBMI,
 
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.green,
+          backgroundColor: ThemeService.accent,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: AppRadius.xxlBorder,
           ),
         ),
 
         child: const Text(
           "Calculate BMI",
-          style: TextStyle(fontSize: 18, color: Colors.black),
+          style: TextStyle(fontSize: 18, color: Colors.white),
         ),
       ),
     );
@@ -310,43 +331,17 @@ class _BmiCalculatorState extends State<BmiCalculator> {
   // 🔹 Health Tip
   Widget buildHealthTip() {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
 
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.8),
-        borderRadius: BorderRadius.circular(25),
+        color: ThemeService.cardColorStrong,
+        borderRadius: AppRadius.xlBorder,
       ),
 
-      child: const Text(
+      child: Text(
         "Maintain a balanced diet and regular exercise to keep your BMI in the normal range.",
+        style: TextStyle(color: ThemeService.textSecondary),
       ),
-    );
-  }
-
-  // 🔹 Bottom Navigation
-  Widget buildBottomNav(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: 1,
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: Colors.green,
-      unselectedItemColor: Colors.grey,
-      backgroundColor: ThemeService.isDark ? const Color(0xFF1A1A2E) : Colors.white,
-
-      onTap: (index) {
-        if (index == 1) return;
-        if (index == 0) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Dashboard()));
-        if (index == 2) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const FoodTracker()));
-        if (index == 3) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const progress()));
-        if (index == 4) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProfileSetting()));
-      },
-
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Dashboard"),
-        BottomNavigationBarItem(icon: Icon(Icons.monitor_weight), label: "BMI"),
-        BottomNavigationBarItem(icon: Icon(Icons.local_fire_department), label: "Calories"),
-        BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: "Progress"),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-      ],
     );
   }
 }

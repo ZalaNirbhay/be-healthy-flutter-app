@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
-import 'dashboard.dart';
-import 'bmi_calculator.dart';
-import 'food_tracker.dart';
-import 'profile_setting.dart';
 import '../widgets/custom_top_bar.dart';
+import '../widgets/bottom_nav.dart';
+import '../widgets/shimmer_loading.dart';
 import '../services/health_engine.dart';
 import '../services/water_service.dart';
 import '../services/food_service.dart';
 import '../services/progress_service.dart';
 import '../services/plan_service.dart';
 import '../services/theme_service.dart';
+import '../theme/app_theme.dart';
 
 class progress extends StatefulWidget {
   const progress({super.key});
@@ -36,6 +35,17 @@ class _progressState extends State<progress> {
   void initState() {
     super.initState();
     _loadData();
+    ThemeService.themeMode.addListener(_onThemeChange);
+  }
+
+  @override
+  void dispose() {
+    ThemeService.themeMode.removeListener(_onThemeChange);
+    super.dispose();
+  }
+
+  void _onThemeChange() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _loadData() async {
@@ -137,89 +147,92 @@ class _progressState extends State<progress> {
 
         child: SafeArea(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(AppSpacing.lg),
 
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 buildTopBar(context, "Progress"),
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
 
                 buildTabs(),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
 
-                buildProgressCard(),
+                if (isLoading) ...[
+                  const ShimmerCard(lineCount: 4),
+                  const SizedBox(height: AppSpacing.lg),
+                  const ShimmerCard(lineCount: 2),
+                  const SizedBox(height: AppSpacing.lg),
+                  const ShimmerList(count: 3),
+                ] else ...[
+                  buildProgressCard(),
 
-                const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.lg),
 
-                // Weekly Summary Stats
-                if (!isLoading && weeklySummary.isNotEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.7),
-                      borderRadius: BorderRadius.circular(20),
+                  // Weekly Summary Stats
+                  if (weeklySummary.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(15),
+                      decoration: BoxDecoration(
+                        color: ThemeService.cardColor,
+                        borderRadius: AppRadius.lgBorder,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildStat("${weeklySummary['avg_calories'] ?? 0}", "Avg Cal"),
+                          _buildStat("${weeklySummary['consistency_score'] ?? 0}%", "Consistency"),
+                          _buildStat("${weeklySummary['total_days_tracked'] ?? 0}/7", "Days"),
+                        ],
+                      ),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildStat("${weeklySummary['avg_calories'] ?? 0}", "Avg Cal"),
-                        _buildStat("${weeklySummary['consistency_score'] ?? 0}%", "Consistency"),
-                        _buildStat("${weeklySummary['total_days_tracked'] ?? 0}/7", "Days"),
-                      ],
+
+                  const SizedBox(height: AppSpacing.base),
+
+                  // Progress Insights
+                  if (progressInsights.isNotEmpty) ...[
+                    Text("Insights",
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
+                    const SizedBox(height: 10),
+                    ...progressInsights.map((insight) => Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: ThemeService.cardColorLight,
+                        borderRadius: AppRadius.mdBorder,
+                      ),
+                      child: Text(insight,
+                          style: TextStyle(fontSize: 13, color: ThemeService.textPrimary)),
+                    )),
+                    const SizedBox(height: AppSpacing.base),
+                  ],
+
+                  Text(
+                    "Activity Log",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: ThemeService.textPrimary,
                     ),
                   ),
 
-                const SizedBox(height: 15),
+                  const SizedBox(height: AppSpacing.base),
 
-                // Progress Insights
-                if (!isLoading && progressInsights.isNotEmpty) ...[
-                  const Text("Insights", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  ...progressInsights.map((insight) => Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Text(insight, style: const TextStyle(fontSize: 13)),
-                  )),
-                  const SizedBox(height: 15),
-                ],
-
-                const Text(
-                  "Activity Log",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-                const SizedBox(height: 15),
-
-                // 🔥 Dynamic activity log
-                if (isLoading)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20),
-                      child: CircularProgressIndicator(color: Colors.green),
-                    ),
-                  )
-                else
+                  // 🔥 Dynamic activity log
                   ...activityLog.map((item) => buildActivityItem(
                     item['icon'],
                     item['title'],
                     item['time'],
                     item['color'],
                   )),
+                ],
               ],
             ),
           ),
         ),
       ),
-      bottomNavigationBar: buildBottomNav(context),
+      bottomNavigationBar: const AppBottomNav(currentIndex: 3),
     );
   }
 
@@ -228,8 +241,8 @@ class _progressState extends State<progress> {
     return Container(
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(30),
+        color: ThemeService.selectorBackground,
+        borderRadius: AppRadius.xxlBorder,
       ),
 
       child: Row(
@@ -244,18 +257,19 @@ class _progressState extends State<progress> {
                 });
               },
 
-              child: Container(
+              child: AnimatedContainer(
+                duration: AppDurations.fast,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.white : Colors.transparent,
-                  borderRadius: BorderRadius.circular(25),
+                  color: isSelected ? ThemeService.chipSelectedColor : Colors.transparent,
+                  borderRadius: AppRadius.xlBorder,
                 ),
 
                 child: Center(
                   child: Text(
                     tabs[index],
                     style: TextStyle(
-                      color: isSelected ? Colors.green : Colors.black54,
+                      color: isSelected ? ThemeService.accent : ThemeService.chipUnselectedText,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -274,33 +288,29 @@ class _progressState extends State<progress> {
     String subtitle = "";
     String progressLabel = "WEEKLY PROGRESS";
 
-    if (!isLoading) {
-      switch (selectedTab) {
-        case 0: // Weight
-          final weight = snapshot['weight_kg'] ?? (snapshot['user_name'] != null ? 0 : 0);
-          final w = _getProfileField('weight_kg');
-          mainValue = w != null ? "${w}kg" : "--";
-          subtitle = "Current weight from profile";
-          break;
-        case 1: // BMI
-          final bmi = (snapshot['bmi'] ?? 0.0).toDouble();
-          mainValue = bmi > 0 ? bmi.toStringAsFixed(1) : "--";
-          subtitle = _getBMIStatus(bmi);
-          break;
-        case 2: // Calories
-          mainValue = "${snapshot['consumed'] ?? 0} kcal";
-          subtitle = "of ${snapshot['target_calories'] ?? 2000} kcal target";
-          progressLabel = "TODAY'S INTAKE";
-          break;
-      }
+    switch (selectedTab) {
+      case 0: // Weight
+        mainValue = "--";
+        subtitle = "Current weight from profile";
+        break;
+      case 1: // BMI
+        final bmiVal = (snapshot['bmi'] ?? 0.0).toDouble();
+        mainValue = bmiVal > 0 ? bmiVal.toStringAsFixed(1) : "--";
+        subtitle = _getBMIStatus(bmiVal);
+        break;
+      case 2: // Calories
+        mainValue = "${snapshot['consumed'] ?? 0} kcal";
+        subtitle = "of ${snapshot['target_calories'] ?? 2000} kcal target";
+        progressLabel = "TODAY'S INTAKE";
+        break;
     }
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
 
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(25),
+        color: ThemeService.cardColor,
+        borderRadius: AppRadius.xlBorder,
       ),
 
       child: Column(
@@ -309,86 +319,76 @@ class _progressState extends State<progress> {
 
           Text(
             progressLabel,
-            style: const TextStyle(color: Colors.black54),
+            style: TextStyle(color: ThemeService.textSecondary),
           ),
 
           const SizedBox(height: 10),
 
-          isLoading
-              ? const Center(
-                  child: CircularProgressIndicator(color: Colors.green),
-                )
-              : Text(
-                  mainValue,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+          Text(
+            mainValue,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: ThemeService.textPrimary,
+            ),
+          ),
 
           const SizedBox(height: 5),
 
           Text(
             subtitle,
-            style: const TextStyle(color: Colors.green),
+            style: TextStyle(color: ThemeService.accent),
           ),
 
-          const SizedBox(height: 20),
+          const SizedBox(height: AppSpacing.lg),
 
           // Progress bar
           Container(
             height: 150,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: const LinearGradient(
-                colors: [Colors.green, Colors.teal],
+              borderRadius: AppRadius.lgBorder,
+              gradient: LinearGradient(
+                colors: [ThemeService.accent, Colors.teal],
               ),
             ),
             child: Center(
-              child: isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Health Score",
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          "${snapshot['health_score'] ?? 0}/100",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          _getScoreLabel(snapshot['health_score'] ?? 0),
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    "Health Score",
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 14,
                     ),
+                  ),
+                  Text(
+                    "${snapshot['health_score'] ?? 0}/100",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 36,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    _getScoreLabel(snapshot['health_score'] ?? 0),
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
 
           const SizedBox(height: 10),
 
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Mon"),
-              Text("Tue"),
-              Text("Wed"),
-              Text("Thu"),
-              Text("Fri"),
-              Text("Sat"),
-              Text("Sun"),
+              for (final day in ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
+                Text(day, style: TextStyle(color: ThemeService.textSecondary, fontSize: 12)),
             ],
           )
         ],
@@ -399,9 +399,9 @@ class _progressState extends State<progress> {
   Widget _buildStat(String value, String label) {
     return Column(
       children: [
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        Text(value, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: ThemeService.textPrimary)),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+        Text(label, style: TextStyle(fontSize: 12, color: ThemeService.textSecondary)),
       ],
     );
   }
@@ -414,8 +414,8 @@ class _progressState extends State<progress> {
       padding: const EdgeInsets.all(15),
 
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(20),
+        color: ThemeService.cardColor,
+        borderRadius: AppRadius.lgBorder,
       ),
 
       child: Row(
@@ -433,24 +433,19 @@ class _progressState extends State<progress> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(time, style: const TextStyle(color: Colors.black54)),
+                    style: TextStyle(fontWeight: FontWeight.bold, color: ThemeService.textPrimary)),
+                Text(time, style: TextStyle(color: ThemeService.textSecondary)),
               ],
             ),
           ),
 
-          const Icon(Icons.arrow_forward_ios, size: 14),
+          Icon(Icons.arrow_forward_ios, size: 14, color: ThemeService.textSecondary),
         ],
       ),
     );
   }
 
   // Helpers
-  dynamic _getProfileField(String field) {
-    // Try to get from snapshot indirectly
-    return null; // Will come from profile data
-  }
-
   String _getBMIStatus(double bmi) {
     if (bmi == 0) return "Calculate your BMI";
     if (bmi < 18.5) return "Underweight";
@@ -465,31 +460,5 @@ class _progressState extends State<progress> {
     if (score >= 40) return "Fair";
     if (score > 0) return "Needs Improvement";
     return "Start Tracking!";
-  }
-
-  // 🔹 BOTTOM NAV
-  Widget buildBottomNav(BuildContext context) {
-    return BottomNavigationBar(
-      currentIndex: 3,
-      type: BottomNavigationBarType.fixed,
-      selectedItemColor: Colors.green,
-      unselectedItemColor: Colors.grey,
-
-      onTap: (index) {
-        if (index == 3) return;
-        if (index == 0) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const Dashboard()));
-        if (index == 1) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const BmiCalculator()));
-        if (index == 2) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const FoodTracker()));
-        if (index == 4) Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const ProfileSetting()));
-      },
-
-      items: const [
-        BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-        BottomNavigationBarItem(icon: Icon(Icons.monitor_weight), label: "BMI"),
-        BottomNavigationBarItem(icon: Icon(Icons.local_fire_department), label: "Calories"),
-        BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: "Progress"),
-        BottomNavigationBarItem(icon: Icon(Icons.person), label: "Profile"),
-      ],
-    );
   }
 }
